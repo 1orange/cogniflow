@@ -1,0 +1,8 @@
+Direction: forward
+Timestamp: 20251005_223350
+Sample rate: 128 Hz
+Channels: 14
+Window length: 1.5 seconds
+Hop length: 0.5 seconds
+Number of windows: 10
+Data shape: (10, 192, 14)
