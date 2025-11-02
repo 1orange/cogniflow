@@ -1,23 +1,21 @@
 """
-AES decryption helpers for Emotiv EPOC
+AES decryption helpers for Emotiv EPOC.
+
+This module now delegates decryption to the Rust extension `emotiv_rs` for speed
+and to keep the implementation in one place.
 """
 
-from Crypto.Cipher import AES
+from emotiv_rs import decrypt_packet as _rs_decrypt, decrypt_packet_with_key as _rs_decrypt_with_key
+from .constants import PACKET_SIZE_BYTES
 
-from .constants import AES_KEY, PACKET_SIZE_BYTES
 
+def decrypt_packet(encrypted_packet: bytes, aes_key_hex: str | None = None) -> bytes | None:
+    """Decrypt a 32-byte packet using Rust implementation (PyO3 binding).
 
-def decrypt_packet(encrypted_packet: bytes) -> bytes | None:
-    """Decrypt a 32-byte packet using AES-ECB (two 16-byte blocks)."""
+    If aes_key_hex is provided (32-hex chars), it's used; otherwise default key is used.
+    """
     if len(encrypted_packet) != PACKET_SIZE_BYTES:
         return None
-
-    try:
-        cipher = AES.new(AES_KEY, AES.MODE_ECB)
-        decrypted = b""
-        for i in range(0, PACKET_SIZE_BYTES, 16):
-            block = encrypted_packet[i : i + 16]
-            decrypted += cipher.decrypt(block)
-        return decrypted
-    except Exception:
-        return None
+    if aes_key_hex:
+        return _rs_decrypt_with_key(encrypted_packet, aes_key_hex)
+    return _rs_decrypt(encrypted_packet)

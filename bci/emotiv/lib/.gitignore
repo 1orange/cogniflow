@@ -1,0 +1,10 @@
+target/
+**/*.pdb
+Cargo.lock
+__pycache__/
+*.so
+*.pyd
+*.dll
+*.dylib
+.maturin/
+python/

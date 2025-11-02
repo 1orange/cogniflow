@@ -1,17 +1,16 @@
 """
-Data provider that wraps EEGReader for real-time streaming to the trainer.
+Data provider that wraps the Rust Emotiv reader for real-time streaming to the trainer.
 
-Provides a buffered, non-blocking interface with background threading and
-proper data format conversion for the trainer application.
+Provides a buffered, non-blocking interface using the Rust reader (no Python thread).
 """
 
 import numpy as np
 import threading
-import time
 from collections import deque
 from typing import Optional
 
-from bci.emotiv import EEGReader
+from emotiv_rs import EmotivReader as _RsReader
+from bci.emotiv.constants import DEFAULT_VID, DEFAULT_PID, PACKET_SIZE_BYTES
 
 
 class DataProvider:
@@ -23,7 +22,7 @@ class DataProvider:
     data source that can be polled for small chunks without blocking the UI.
     """
     
-    def __init__(self, fs: int = 128, n_channels: int = 14):
+    def __init__(self, fs: int = 128, n_channels: int = 14, aes_key_hex: str | None = None, vid: int = DEFAULT_VID, pid: int = DEFAULT_PID):
         """
         Initialize the data provider.
         
@@ -33,12 +32,15 @@ class DataProvider:
         """
         self.fs = fs
         self.n_channels = n_channels
-        self.reader: Optional[EEGReader] = None
+        self.reader: Optional[_RsReader] = None
         self._running = False
-        self._thread: Optional[threading.Thread] = None
+        self._thread: Optional[threading.Thread] = None  # kept for compatibility; unused
         self._buffer = deque(maxlen=fs * 10)  # Buffer up to 10 seconds
         self._lock = threading.Lock()
         self._intended_label: Optional[str] = None
+        self._aes_key_hex = aes_key_hex
+        self._vid = vid
+        self._pid = pid
         
         # Sensor names in order
         self.sensor_names = [
@@ -47,31 +49,19 @@ class DataProvider:
         ]
     
     def start(self):
-        """Start reading from the Emotiv device."""
+        """Start reading from the Emotiv device (Rust backend)."""
         if self._running:
             return
         
         self._running = True
-        self.reader = EEGReader()
-        self.reader.open()
-        
-        # Start background thread to read data
-        self._thread = threading.Thread(target=self._read_loop, daemon=True)
-        self._thread.start()
-        
-        # Give it a moment to start collecting data
-        time.sleep(0.1)
+        self.reader = _RsReader(self._vid, self._pid, PACKET_SIZE_BYTES, self._aes_key_hex)
+        self.reader.start()
     
     def stop(self):
         """Stop reading from the Emotiv device."""
         self._running = False
-        
-        if self._thread:
-            self._thread.join(timeout=2.0)
-            self._thread = None
-        
         if self.reader:
-            self.reader.close()
+            self.reader.stop()
             self.reader = None
         
         with self._lock:
@@ -87,6 +77,8 @@ class DataProvider:
         Returns:
             numpy array of shape (n_samples, n_channels) in microvolts
         """
+        # First, pull any new samples from the Rust reader (non-blocking)
+        self._drain_channel()
         with self._lock:
             available = len(self._buffer)
             if available == 0:
@@ -116,28 +108,21 @@ class DataProvider:
         """
         self._intended_label = label
     
-    def _read_loop(self):
-        """Background thread that continuously reads from the Emotiv device."""
-        try:
-            for packet in self.reader.read_parsed():
-                if not self._running:
-                    break
-                
-                # Convert sensor data to numpy array
-                sensor_values = []
-                for sensor_name in self.sensor_names:
-                    value = packet.sensors.get(sensor_name, 0)
-                    # Convert 14-bit value to microvolts (approximate scaling)
-                    # EPOC reports 14-bit values (0-16383), scale to ±4096 µV range
-                    uv_value = (value - 8192) * 0.51
-                    sensor_values.append(uv_value)
-                
-                sample = np.array(sensor_values)
-                
-                with self._lock:
-                    self._buffer.append(sample)
-        
-        except Exception as e:
-            print(f"Error in data provider read loop: {e}")
-            self._running = False
+    def _drain_channel(self):
+        """Drain parsed packets from Rust channel into local buffer (non-blocking)."""
+        if not self.reader:
+            return
+        while True:
+            parsed = self.reader.poll_parsed()
+            if parsed is None:
+                break
+            sensor_values = []
+            for sensor_name in self.sensor_names:
+                value = parsed["sensors"].get(sensor_name, 0)
+                # Convert 14-bit value to microvolts (approximate scaling)
+                uv_value = (value - 8192) * 0.51
+                sensor_values.append(uv_value)
+            sample = np.array(sensor_values)
+            with self._lock:
+                self._buffer.append(sample)
 

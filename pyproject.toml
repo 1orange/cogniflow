@@ -16,6 +16,7 @@ dependencies = [
     "hidapi (>=0.14.0.post4,<0.15.0)",
     "pycryptodome (>=3.23.0,<4.0.0)",
     "pyhidapi (>=0.0.2,<0.0.3)",
+    "maturin (>=1.9.6,<2.0.0)",
 ]
 
 [tool.poetry.group.dev.dependencies]
