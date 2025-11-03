@@ -41,51 +41,63 @@ class BaseScene:
         c = size // 2
 
         if direction == "left":
+            # Arrow pointing left
             pg.draw.polygon(
                 surf,
                 color,
                 [
-                    (size * 0.75, c),
-                    (size * 0.25, c),
-                    (size * 0.4, c * 0.6),
-                    (size * 0.25, c),
-                    (size * 0.4, c * 1.4),
+                    (size * 0.2, c),           # tip (left)
+                    (size * 0.5, size * 0.25), # upper wing
+                    (size * 0.5, size * 0.4),  # upper shaft
+                    (size * 0.8, size * 0.4),  # upper right
+                    (size * 0.8, size * 0.6),  # lower right
+                    (size * 0.5, size * 0.6),  # lower shaft
+                    (size * 0.5, size * 0.75), # lower wing
                 ],
             )
         elif direction == "right":
+            # Arrow pointing right
             pg.draw.polygon(
                 surf,
                 color,
                 [
-                    (size * 0.25, c),
-                    (size * 0.75, c),
-                    (size * 0.6, c * 0.6),
-                    (size * 0.75, c),
-                    (size * 0.6, c * 1.4),
+                    (size * 0.8, c),           # tip (right)
+                    (size * 0.5, size * 0.25), # upper wing
+                    (size * 0.5, size * 0.4),  # upper shaft
+                    (size * 0.2, size * 0.4),  # upper left
+                    (size * 0.2, size * 0.6),  # lower left
+                    (size * 0.5, size * 0.6),  # lower shaft
+                    (size * 0.5, size * 0.75), # lower wing
                 ],
             )
         elif direction == "forward":
+            # Arrow pointing up
             pg.draw.polygon(
                 surf,
                 color,
                 [
-                    (c, size * 0.75),
-                    (c, size * 0.25),
-                    (c * 0.6, size * 0.4),
-                    (c, size * 0.25),
-                    (c * 1.4, size * 0.4),
+                    (c, size * 0.2),           # tip (up)
+                    (size * 0.25, size * 0.5), # left wing
+                    (size * 0.4, size * 0.5),  # left shaft
+                    (size * 0.4, size * 0.8),  # bottom left
+                    (size * 0.6, size * 0.8),  # bottom right
+                    (size * 0.6, size * 0.5),  # right shaft
+                    (size * 0.75, size * 0.5), # right wing
                 ],
             )
         elif direction == "backward":
+            # Arrow pointing down
             pg.draw.polygon(
                 surf,
                 color,
                 [
-                    (c, size * 0.25),
-                    (c, size * 0.75),
-                    (c * 0.6, size * 0.6),
-                    (c, size * 0.75),
-                    (c * 1.4, size * 0.6),
+                    (c, size * 0.8),           # tip (down)
+                    (size * 0.25, size * 0.5), # left wing
+                    (size * 0.4, size * 0.5),  # left shaft
+                    (size * 0.4, size * 0.2),  # top left
+                    (size * 0.6, size * 0.2),  # top right
+                    (size * 0.6, size * 0.5),  # right shaft
+                    (size * 0.75, size * 0.5), # right wing
                 ],
             )
         return surf

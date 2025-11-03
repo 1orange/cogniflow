@@ -206,6 +206,21 @@ class RecordScene(BaseScene):
                     self.colors["yellow"],
                     True,
                 )
+                
+                # Display current phase
+                phase_text = phase.upper()
+                phase_color = (
+                    self.colors["blue"] if phase == "task"
+                    else self.colors["white"]
+                )
+                self.draw_text(
+                    f"Phase: {phase_text}",
+                    W // 2,
+                    130,
+                    32,
+                    phase_color,
+                    True,
+                )
 
                 # Progress bar
                 pg.draw.rect(

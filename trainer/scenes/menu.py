@@ -33,15 +33,15 @@ class MenuScene(BaseScene):
             )
 
             # Menu options
-            self.draw_text("[C] Calibrate", W // 2, 200, 36, self.colors["green"], True)
             self.draw_text(
                 "[R] Record Data", W // 2, 240, 36, self.colors["green"], True
             )
-            self.draw_text(
-                "[D] Drive (BCI)", W // 2, 280, 36, self.colors["green"], True
-            )
+            self.draw_text("[C] Calibrate", W // 2, 200, 36, self.colors["green"], True)
             self.draw_text(
                 "[A] Drive (Arrow Keys)", W // 2, 320, 36, self.colors["green"], True
+            )
+            self.draw_text(
+                "[D] Drive (BCI)", W // 2, 280, 36, self.colors["green"], True
             )
             self.draw_text("[ESC] Quit", W // 2, 380, 28, self.colors["yellow"], True)
 
@@ -81,51 +81,61 @@ class MenuScene(BaseScene):
                 if e.type == pg.QUIT:
                     self.running = False
                 elif e.type == pg.KEYDOWN:
-                    if e.key == pg.K_ESCAPE:
-                        self.running = False
-                    elif e.key == pg.K_c:
-                        # Run calibration scene
-                        calibration = CalibrationScene(
-                            self.screen, self.clock, self.source
-                        )
-                        calibration.run()
-                    elif e.key == pg.K_r:
-                        # Run record scene
-                        record = RecordScene(self.screen, self.clock, self.source)
-                        record.run()
-                    elif e.key == pg.K_d:
-                        # Run BCI driving scene
-                        if os.path.exists(self.model_path):
+                    match e.key:
+                        case pg.K_ESCAPE:
+                            self.running = False
+
+                        case pg.K_c:
+                            # Run calibration scene
+                            calibration = CalibrationScene(
+                                self.screen, self.clock, self.source
+                            )
+                            calibration.run()
+
+                        case pg.K_r:
+                            # Run record scene
+                            record = RecordScene(self.screen, self.clock, self.source)
+                            record.run()
+
+                        case pg.K_d:
+                            # Run BCI driving scene
+                            if os.path.exists(self.model_path):
+                                driving = DrivingScene(
+                                    self.screen,
+                                    self.clock,
+                                    self.source,
+                                    self.model_path,
+                                    "bci",
+                                )
+                                driving.run()
+                            else:
+                                self.screen.fill(self.colors["dark_bg"])
+                                self.draw_text(
+                                    "No model found. Calibrate first.",
+                                    W // 2,
+                                    H // 2,
+                                    32,
+                                    self.colors["red"],
+                                    True,
+                                )
+                                pg.display.flip()
+                                pg.time.wait(1200)
+
+                        case pg.K_a:
+                            # Run arrow key driving scene
                             driving = DrivingScene(
                                 self.screen,
                                 self.clock,
                                 self.source,
                                 self.model_path,
-                                "bci",
+                                "arrow",
                             )
                             driving.run()
-                        else:
-                            self.screen.fill(self.colors["dark_bg"])
-                            self.draw_text(
-                                "No model found. Calibrate first.",
-                                W // 2,
-                                H // 2,
-                                32,
-                                self.colors["red"],
-                                True,
-                            )
-                            pg.display.flip()
-                            pg.time.wait(1200)
-                    elif e.key == pg.K_a:
-                        # Run arrow key driving scene
-                        driving = DrivingScene(
-                            self.screen,
-                            self.clock,
-                            self.source,
-                            self.model_path,
-                            "arrow",
-                        )
-                        driving.run()
+
+                        case _:
+                            # Optional: handle unassigned keys
+                            pass
+
 
             pg.display.flip()
-            self.clock.tick(60)
+            self.clock.tick(120)

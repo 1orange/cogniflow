@@ -6,7 +6,7 @@ from collections import Counter
 from typing import List, Optional
 
 # Direction labels for BCI control
-LABELS = ["left", "right", "forward", "brake"]
+LABELS = ["forward", "left", "right", "backward"]
 
 
 def majority_vote(predictions: List[str], k: int = 5) -> Optional[str]:
