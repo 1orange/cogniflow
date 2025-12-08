@@ -16,11 +16,15 @@ def exit() -> None:  # kept for compatibility
     return None
 
 
-def enumerate_devices(vid: int = DEFAULT_VID, pid: int = DEFAULT_PID):  # pragma: no cover
+def enumerate_devices(
+    vid: int = DEFAULT_VID, pid: int = DEFAULT_PID
+):  # pragma: no cover
     """Enumeration is handled internally by the Rust reader; returns empty list."""
     return []
 
 
-def open_best_interface(vid: int = DEFAULT_VID, pid: int = DEFAULT_PID):  # pragma: no cover
+def open_best_interface(
+    vid: int = DEFAULT_VID, pid: int = DEFAULT_PID
+):  # pragma: no cover
     """Device opening is handled internally by the Rust reader; returns None."""
     return None

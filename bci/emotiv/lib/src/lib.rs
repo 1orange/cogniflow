@@ -266,7 +266,16 @@ impl EmotivReader {
     fn poll_raw<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyBytes>>> {
         let guard = self.inner.lock();
         if let Some(ref rx) = guard.rx {
-            match rx.try_recv() { Ok(bytes) => Ok(Some(PyBytes::new(py, &bytes))), Err(_) => Ok(None) }
+            // Drain the queue and get only the latest packet
+            // This prevents reading stale data when Python can't keep up with 128 Hz
+            let mut latest: Option<Vec<u8>> = None;
+            loop {
+                match rx.try_recv() {
+                    Ok(bytes) => latest = Some(bytes),
+                    Err(_) => break,
+                }
+            }
+            Ok(latest.map(|bytes| PyBytes::new(py, &bytes)))
         } else { Ok(None) }
     }
 

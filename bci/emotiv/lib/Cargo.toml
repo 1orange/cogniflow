@@ -13,6 +13,7 @@ crate-type = ["cdylib"]
 [tool.maturin]
 python-source = "python"
 strip = true
+compatibility = "linux"
 
 [dependencies]
 aes = "0.8.4"

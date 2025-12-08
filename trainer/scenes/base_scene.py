@@ -46,13 +46,13 @@ class BaseScene:
                 surf,
                 color,
                 [
-                    (size * 0.2, c),           # tip (left)
-                    (size * 0.5, size * 0.25), # upper wing
+                    (size * 0.2, c),  # tip (left)
+                    (size * 0.5, size * 0.25),  # upper wing
                     (size * 0.5, size * 0.4),  # upper shaft
                     (size * 0.8, size * 0.4),  # upper right
                     (size * 0.8, size * 0.6),  # lower right
                     (size * 0.5, size * 0.6),  # lower shaft
-                    (size * 0.5, size * 0.75), # lower wing
+                    (size * 0.5, size * 0.75),  # lower wing
                 ],
             )
         elif direction == "right":
@@ -61,13 +61,13 @@ class BaseScene:
                 surf,
                 color,
                 [
-                    (size * 0.8, c),           # tip (right)
-                    (size * 0.5, size * 0.25), # upper wing
+                    (size * 0.8, c),  # tip (right)
+                    (size * 0.5, size * 0.25),  # upper wing
                     (size * 0.5, size * 0.4),  # upper shaft
                     (size * 0.2, size * 0.4),  # upper left
                     (size * 0.2, size * 0.6),  # lower left
                     (size * 0.5, size * 0.6),  # lower shaft
-                    (size * 0.5, size * 0.75), # lower wing
+                    (size * 0.5, size * 0.75),  # lower wing
                 ],
             )
         elif direction == "forward":
@@ -76,13 +76,13 @@ class BaseScene:
                 surf,
                 color,
                 [
-                    (c, size * 0.2),           # tip (up)
-                    (size * 0.25, size * 0.5), # left wing
+                    (c, size * 0.2),  # tip (up)
+                    (size * 0.25, size * 0.5),  # left wing
                     (size * 0.4, size * 0.5),  # left shaft
                     (size * 0.4, size * 0.8),  # bottom left
                     (size * 0.6, size * 0.8),  # bottom right
                     (size * 0.6, size * 0.5),  # right shaft
-                    (size * 0.75, size * 0.5), # right wing
+                    (size * 0.75, size * 0.5),  # right wing
                 ],
             )
         elif direction == "backward":
@@ -91,13 +91,13 @@ class BaseScene:
                 surf,
                 color,
                 [
-                    (c, size * 0.8),           # tip (down)
-                    (size * 0.25, size * 0.5), # left wing
+                    (c, size * 0.8),  # tip (down)
+                    (size * 0.25, size * 0.5),  # left wing
                     (size * 0.4, size * 0.5),  # left shaft
                     (size * 0.4, size * 0.2),  # top left
                     (size * 0.6, size * 0.2),  # top right
                     (size * 0.6, size * 0.5),  # right shaft
-                    (size * 0.75, size * 0.5), # right wing
+                    (size * 0.75, size * 0.5),  # right wing
                 ],
             )
         return surf

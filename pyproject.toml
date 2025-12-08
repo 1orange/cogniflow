@@ -6,7 +6,7 @@ authors = [
     {name = "Jean Dossa Tsimbazafy",email = "orangel33t@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = [
     "numpy (>=2.3.2,<3.0.0)",
     "scipy (>=1.16.1,<2.0.0)",
@@ -17,7 +17,15 @@ dependencies = [
     "pycryptodome (>=3.23.0,<4.0.0)",
     "pyhidapi (>=0.0.2,<0.0.3)",
     "maturin (>=1.9.6,<2.0.0)",
+    "pandas (>=2.0.0,<3.0.0)",
+    "pyyaml (>=6.0,<7.0)",
+    "xgboost (>=1.7.0,<4.0.0)",
+    "matplotlib (>=3.7.0,<4.0.0)",
+    "seaborn (>=0.12.0,<0.14.0)",
 ]
+
+[tool.poetry.dependencies]
+emotiv-rs = {path = "bci/emotiv/lib/wheels/emotiv_rs-0.1.0-cp313-cp313-linux_x86_64.whl", develop = false}
 
 [tool.poetry.group.dev.dependencies]
 ruff = ">=0.12,<1"

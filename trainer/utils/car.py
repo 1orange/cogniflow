@@ -1,6 +1,4 @@
-import pygame as pg
 import math
-import os
 from config import *
 
 
@@ -22,10 +20,10 @@ class Car:
         self.radius = 10
 
         # Load car sprite
-        sprite_path = os.path.join(os.path.dirname(__file__), "..", "assets", "car.png")
-        self.sprite = pg.image.load(sprite_path).convert()
-        self.sprite.set_colorkey((255, 0, 255))
-        self.sprite_rect = self.sprite.get_rect()
+        # sprite_path = os.path.join(os.path.dirname(__file__), "..", "assets", "m2.png")
+        # self.sprite = pg.image.load(sprite_path).convert()
+        # self.sprite.set_colorkey((255, 0, 255))
+        # self.sprite_rect = self.sprite.get_rect()
 
     def update(self, dt, commands=None):
         """Update car position based on multiple commands and time delta using pseudo-3D physics."""

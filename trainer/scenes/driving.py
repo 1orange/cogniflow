@@ -65,8 +65,18 @@ class DrivingScene(BaseScene):
     def _load_sprites(self):
         base = os.path.join(os.path.dirname(__file__), "..", "assets")
         self.road_sprite = pg.image.load(os.path.join(base, "road.png")).convert()
+
+        # Load car sprite with proper alpha handling
         self.car_sprite = pg.image.load(os.path.join(base, "car.png")).convert()
-        self.car_sprite.set_colorkey((255, 0, 255))
+
+        # Set colorkey BEFORE converting to alpha - this properly handles transparency
+        car_img.set_colorkey((255, 0, 255))
+
+        # Get original dimensions to maintain aspect ratio
+        orig_width, orig_height = car_img.get_size()
+        target_width = 80
+        target_height = int(target_width * orig_height / orig_width)
+
         self.mountains_sprite = pg.image.load(
             os.path.join(base, "mountains.png")
         ).convert()
@@ -80,13 +90,14 @@ class DrivingScene(BaseScene):
         ) + ROAD_CURVE_AMPLITUDE_2 * math.sin(road_position_x / ROAD_CURVE_FREQUENCY_2)
 
     def calculate_road_incline_z(self, road_position_x):
-        return (
-            ROAD_INCLINE_BASE
-            + ROAD_INCLINE_AMPLITUDE_1
-            * math.sin(road_position_x / ROAD_INCLINE_FREQUENCY_1)
-            - ROAD_INCLINE_AMPLITUDE_2
-            * math.sin(road_position_x / ROAD_INCLINE_FREQUENCY_2)
-        )
+        return ROAD_INCLINE_BASE
+        # return (
+        #     ROAD_INCLINE_BASE
+        #     + ROAD_INCLINE_AMPLITUDE_1
+        #     * math.sin(road_position_x / ROAD_INCLINE_FREQUENCY_1)
+        #     - ROAD_INCLINE_AMPLITUDE_2
+        #     * math.sin(road_position_x / ROAD_INCLINE_FREQUENCY_2)
+        # )
 
     # ----------------------------
     # Rendering helpers (virtual space)
@@ -122,7 +133,8 @@ class DrivingScene(BaseScene):
 
             w = max(1, int(width))
             h = max(1, int(height))
-            scaled_sprite = pg.transform.scale(sprite, (w, h))
+            # Use smoothscale for higher quality at the cost of some performance
+            scaled_sprite = pg.transform.smoothscale(sprite, (w, h))
             surface.blit(
                 scaled_sprite, (int(screen_horizontal), int(screen_vertical - h + 1))
             )

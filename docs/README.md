@@ -1,6 +1,6 @@
 # Documentation
 
-This directory contains comprehensive documentation for the Cogniflow project, with a focus on the Emotiv EPOC Gen 1 integration improvements.
+This directory contains comprehensive documentation for the Cogniflow project, with a focus on the Emotiv EPOC Gen 1 integration improvements and the integrated ML Pipeline (Modulus).
 
 ## 📚 Quick Start
 
@@ -135,7 +135,7 @@ bash install_dev.sh
 
 # Run tests
 cd /home/jean/dev/diplomka/cogniflow
-poetry run python test_emotiv_rs.py
+poetry run python scripts/test_emotiv_rs.py
 ```
 
 ## 📦 Files Modified
@@ -147,7 +147,7 @@ poetry run python test_emotiv_rs.py
 - `bci/emotiv/reader.py` - Updated ParsedPacket dataclass
 
 ### Tests
-- `test_emotiv_rs.py` - Enhanced test suite with comprehensive output
+- `scripts/test_emotiv_rs.py` - Enhanced test suite with comprehensive output
 
 ## 🎓 Learning Path
 
@@ -174,7 +174,7 @@ poetry run python test_emotiv_rs.py
 
 After building, verify:
 
-- [ ] All tests pass: `poetry run python test_emotiv_rs.py`
+- [ ] All tests pass: `poetry run python scripts/test_emotiv_rs.py`
 - [ ] Gyro shows ~0 when still (not ~104)
 - [ ] Battery shows 0-100 range
 - [ ] Quality shows 0-4 per sensor
@@ -194,6 +194,37 @@ See [EMOTIV_IMPROVEMENTS.md](EMOTIV_IMPROVEMENTS.md#troubleshooting) for:
 - Value interpretation
 - Hardware-specific quirks
 
+## 🤖 ML Pipeline (Modulus) Documentation
+
+The Cogniflow project now includes an integrated ML Pipeline module called Modulus. For detailed documentation on the ML pipeline:
+
+- **[Modulus Documentation Index](../modulus/docs/INDEX.md)** - Complete ML pipeline documentation
+- **[Modulus Quick Start](modulus/QUICKSTART.md)** - Get started with ML pipeline
+- **[Experiment Features](modulus/EXPERIMENT_FEATURES.md)** ⭐ **NEW** - Comprehensive experiment system guide
+- **[Modulus System Design](../modulus/SDD.md)** - Architecture and design principles
+- **[Modulus Configuration Guide](../modulus/docs/preprocessing-modes.md)** - Configuration options
+
+### Using Modulus from Cogniflow
+
+The Modulus ML Pipeline is accessible through the main menu:
+1. Launch Cogniflow: `poetry run python -m trainer.main`
+2. Press `[M]` to enter ModulusScene
+3. Configure experiments:
+   - `[UP]/[DOWN]` - Select experiment mode (Binary/Multiclass/Both)
+   - `[Q]` - Toggle Quick Mode
+   - `[H]` - Toggle Hyperparameter Tuning
+4. Press `[ENTER]` to run experiments
+5. View results in `results/experiments_{mode}_{timestamp}/`
+6. Load saved models from `models/` folder
+
+**New Features:**
+- ✅ **Split Ratio Testing**: Automatically tests 70/15/15 and 80/10/10 splits
+- ✅ **Hyperparameter Tuning**: GridSearchCV optimization for all models
+- ✅ **Model Persistence**: All trained models saved to `models/` folder
+- ✅ **Interactive UI**: Configure and run experiments through Pygame interface
+
+The ModulusScene follows MVC architecture and integrates seamlessly with the Cogniflow interface.
+
 ## 📚 References
 
 - [python-emotiv](https://github.com/ozancaglayan/python-emotiv) - Reference implementation
@@ -206,5 +237,5 @@ See project root for license information.
 
 ---
 
-**Questions?** All documentation is self-contained in this `docs/` directory. Start with the Quick Start guide and work through the materials as needed.
+**Questions?** All documentation is self-contained in this `docs/` directory and `modulus/docs/` directory. Start with the Quick Start guide and work through the materials as needed.
 

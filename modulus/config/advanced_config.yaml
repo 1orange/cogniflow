@@ -1,0 +1,62 @@
+# Advanced configuration example with more models and preprocessing
+
+Data:
+  source: data/
+  loader: npy
+  feature_key: features
+  target_key: labels
+  metadata_key: metadata
+  use_metadata: true  # Include numerical metadata as features
+  task_type: classification
+  split:
+    train: 0.6
+    val: 0.2
+    test: 0.2
+    random_state: 123
+    stratify: true
+
+Preprocessing:
+  standard_scaler: true
+  pca_components: 0.95  # Keep 95% of variance
+
+Models:
+  - name: LogisticRegression
+    params:
+      max_iter: 2000
+      C: 1.0
+      random_state: 42
+
+  - name: RandomForest
+    params:
+      n_estimators: 200
+      max_depth: 20
+      min_samples_split: 5
+      random_state: 42
+
+  - name: GradientBoosting
+    params:
+      n_estimators: 150
+      learning_rate: 0.05
+      max_depth: 5
+      random_state: 42
+
+  - name: SVC
+    params:
+      kernel: rbf
+      C: 1.0
+      probability: true
+      random_state: 42
+
+  - name: KNN
+    params:
+      n_neighbors: 5
+      weights: distance
+
+Output:
+  path: results/
+  formats:
+    - csv
+    - json
+    - html
+  primary_metric: f1_score
+

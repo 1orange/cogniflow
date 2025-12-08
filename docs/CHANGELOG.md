@@ -25,6 +25,42 @@ Each dated changelog contains comprehensive information including:
 
 ## [Unreleased]
 
+### Added
+
+#### Preprocessing Experiment Enhancements
+- **Split Ratio Testing**: Experiments now automatically test both 70/15/15 and 80/10/10 data splits
+  - Results include comparison visualizations
+  - Best configuration identified per split ratio
+  - Helps determine optimal train/validation/test distribution
+- **Hyperparameter Tuning**: Added `--hyperparameter-tuning` flag for GridSearchCV optimization
+  - Tests multiple hyperparameter combinations per model
+  - Finds optimal parameters automatically
+  - Available for LogisticRegression, DecisionTree, SVM, and RandomForest
+- **Model Persistence**: All trained models automatically saved to `models/` folder
+  - Models include complete preprocessing pipeline + trained model
+  - Saved as `.pkl` files using `joblib`
+  - Filename format: `{ModelName}_{PreprocessingConfig}_{SplitRatio}_{Timestamp}.pkl`
+  - Models can be loaded and used directly without retraining
+- **Pygame UI Integration**: Experiments can be run through ModulusScene interface
+  - Interactive mode selection (Binary/Multiclass/Both)
+  - Quick mode toggle
+  - Hyperparameter tuning toggle
+  - Real-time progress display
+- **Enhanced Results**: Results now include split ratio information and model paths
+  - CSV includes `split_ratio`, `train_size`, `val_size`, `test_size`, `model_path` columns
+  - New visualization: split ratio comparison charts
+  - Best configurations report includes split ratio analysis
+
+### Changed
+
+#### Experiment Execution
+- **Experiment Count**: Full mode now runs 800+ experiments (was 400+)
+  - Due to testing both split ratios
+  - Quick mode runs 40 experiments (was 20)
+- **Results Location**: Results saved to `results/experiments_{mode}_{timestamp}/` instead of `results/experiments/`
+  - Better organization when running multiple experiment sets
+  - Timestamp-based directories prevent overwriting
+
 ### Planned
 - Neural network model implementation for BCI classification
 - Real-time performance monitoring dashboard
@@ -283,7 +319,7 @@ bash install_dev.sh
 #### 5. Run Tests
 
 ```bash
-poetry run python test_emotiv_rs.py
+poetry run python scripts/test_emotiv_rs.py
 ```
 
 All tests should pass with new battery and quality fields visible.

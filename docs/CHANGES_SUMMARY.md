@@ -272,7 +272,7 @@ maturin develop --release
 ### 2. Run Tests
 ```bash
 cd /home/jean/dev/diplomka/cogniflow
-python test_emotiv_rs.py
+python scripts/test_emotiv_rs.py
 ```
 
 ### 3. Test with Your Headset
@@ -303,7 +303,7 @@ with EEGReader() as reader:
 
 After rebuilding, verify:
 
-- [ ] `python test_emotiv_rs.py` - All 7 tests pass
+- [ ] `python scripts/test_emotiv_rs.py` - All 7 tests pass
 - [ ] Gyro shows ~0 when headset is still (not ~104)
 - [ ] Battery shows reasonable percentage (e.g., 50-100%)
 - [ ] Quality shows 0-4 values for each sensor

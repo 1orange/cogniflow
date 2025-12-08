@@ -1,0 +1,117 @@
+# Configuration for Forward Direction Classification
+# This config trains 4 models (Logistic Regression, Decision Tree, SVM, Random Forest)
+# on forward direction data using the modulus framework
+
+Data:
+  source: data/prepared/
+  loader: npy
+  feature_key: features
+  target_key: labels
+  metadata_key: metadata
+  use_metadata: false
+  task_type: classification
+  split:
+    train: 0.7
+    val: 0.15
+    test: 0.15
+    random_state: 42
+    stratify: true
+
+# Extended preprocessing with custom techniques
+Preprocessing:
+  # === EEG-SPECIFIC PREPROCESSING (NEW!) ===
+  
+  # 1. Notch filter - Remove 50/60 Hz power line noise
+  notch_filter: false          # Enable to remove power line interference
+  notch_freq: 50.0            # 50 Hz (EU) or 60 Hz (US)
+  notch_quality: 30.0         # Quality factor (higher = narrower notch)
+  
+  # 2. Band-pass filter - Keep relevant EEG frequencies (0.5-40 Hz)
+  bandpass_filter: false       # Enable for standard EEG preprocessing
+  bandpass_low: 0.5           # Low cutoff (Hz) - removes DC drift
+  bandpass_high: 40.0         # High cutoff (Hz) - removes high-freq noise
+  bandpass_order: 4           # Filter order
+  
+  # 3. Smoothing filter - Moving average based on time window
+  smoothing_filter: false      # Enable for signal smoothing
+  smoothing_window_ms: 100.0  # Window size in milliseconds
+  
+  # 4. Artifact rejection - Automatic epoch cleaning
+  artifact_rejection: false    # Enable to remove bad epochs
+  amplitude_threshold: 100.0  # Peak-to-peak threshold (µV)
+  flatline_threshold: 0.1     # Flatline detection (µV)
+  flatline_duration_ms: 200.0 # Flatline duration (ms)
+  hf_power_threshold: 5.0     # High-frequency noise threshold
+  hf_freq_min: 30.0          # Min frequency for HF detection (Hz)
+  reject_mode: 'mark'         # 'mark' or 'interpolate'
+  
+  # === STANDARD PREPROCESSING ===
+  
+  # Standard scaling
+  standard_scaler: true
+  
+  # PCA dimensionality reduction
+  pca_components: 100  # Reduce to 100 dimensions for faster training
+  
+  # === CUSTOM TIME-SERIES PREPROCESSING ===
+  
+  # Downsample to reduce dimensionality (optional)
+  downsample_factor: null  # Set to 2, 4, etc. to downsample
+  
+  # Apply moving average filter for smoothing (optional)
+  moving_average: false
+  moving_average_window: 5
+  
+  # Extract statistical features instead of using raw timeseries (optional)
+  extract_features: false
+  feature_list:
+    - mean
+    - std
+    - energy
+    - range
+  
+  # Select specific channels (optional)
+  selected_channels: null  # e.g., [0, 1, 2, 3, 4] to keep first 5 channels
+  
+  # Use robust scaler instead of standard scaler (optional)
+  robust_scaler: false
+  
+  # Sampling frequency for time-based operations
+  sampling_frequency: 128.0  # Hz (from your metadata)
+
+# Models to train and compare
+Models:
+  - name: LogisticRegression
+    params:
+      max_iter: 1000
+      random_state: 42
+      n_jobs: -1
+
+  - name: DecisionTree
+    params:
+      max_depth: 20
+      random_state: 42
+
+  - name: SVM
+    params:
+      kernel: rbf
+      C: 1.0
+      random_state: 42
+      probability: true  # Enable probability estimates
+
+  - name: RandomForest
+    params:
+      n_estimators: 100
+      max_depth: 20
+      random_state: 42
+      n_jobs: -1
+
+# Output configuration
+Output:
+  path: results/forward_direction/
+  formats:
+    - csv
+    - json
+    - html
+  primary_metric: accuracy
+

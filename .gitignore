@@ -109,4 +109,5 @@ fabric.properties
 .history
 .ionide
 
-# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,pycharm+all
+# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,pycharm+allmodels/*.pkl
+.cursor/

@@ -4,7 +4,7 @@ High-level EEGReader API backed by the Rust `emotiv_rs` extension.
 
 import time
 from dataclasses import dataclass
-from typing import Dict, Iterator, Optional, Any, List
+from typing import Dict, Iterator, Any, List
 
 from emotiv_rs import EmotivReader as _RsReader
 from .constants import DEFAULT_VID, DEFAULT_PID, PACKET_SIZE_BYTES
@@ -26,7 +26,12 @@ class EEGReader:
     Streams raw, decrypted, and parsed packets via the Rust backend.
     """
 
-    def __init__(self, vid: int = DEFAULT_VID, pid: int = DEFAULT_PID, aes_key_hex: str | None = None):
+    def __init__(
+        self,
+        vid: int = DEFAULT_VID,
+        pid: int = DEFAULT_PID,
+        aes_key_hex: str | None = None,
+    ):
         self.vid = vid
         self.pid = pid
         self._rs = _RsReader(vid, pid, PACKET_SIZE_BYTES, aes_key_hex)

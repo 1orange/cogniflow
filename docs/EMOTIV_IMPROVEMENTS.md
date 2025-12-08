@@ -156,7 +156,7 @@ poetry run maturin develop --release -m bci/emotiv/lib/Cargo.toml
 
 ```bash
 cd /home/jean/dev/diplomka/cogniflow
-python test_emotiv_rs.py
+python scripts/test_emotiv_rs.py
 ```
 
 **Expected output:**

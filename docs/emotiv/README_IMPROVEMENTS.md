@@ -31,7 +31,7 @@ maturin develop --release
 
 ```bash
 cd /home/jean/dev/diplomka/cogniflow
-python test_emotiv_rs.py
+python scripts/test_emotiv_rs.py
 ```
 
 Expected output:
@@ -134,7 +134,7 @@ class ParsedPacket:
 
 After rebuilding, check:
 
-- [ ] Run `python test_emotiv_rs.py` - All tests pass
+- [ ] Run `python scripts/test_emotiv_rs.py` - All tests pass
 - [ ] Gyro shows ~0 when still (not ~104)
 - [ ] Battery shows 0-100 range
 - [ ] Quality shows 0-4 per sensor

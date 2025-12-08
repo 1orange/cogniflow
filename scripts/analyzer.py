@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def read_npy_file(file_path):
     """
     Reads and prints the contents of a .npy file.
