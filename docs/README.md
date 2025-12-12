@@ -194,6 +194,84 @@ See [EMOTIV_IMPROVEMENTS.md](EMOTIV_IMPROVEMENTS.md#troubleshooting) for:
 - Value interpretation
 - Hardware-specific quirks
 
+## 🔧 Device Management System
+
+Cogniflow now includes a comprehensive device management system that supports multiple EEG data sources and allows easy switching between devices.
+
+### Supported Devices
+
+1. **🧠 Emotiv EPOC** - Real EEG headset (14 channels, 128 Hz)
+   - Automatic detection via HID enumeration
+   - Supports multiple connected devices
+   - Shows device serial numbers and VID/PID
+
+2. **🔧 Dummy Device** - Simulated data for testing/development
+   - Generates synthetic EEG-like signals
+   - Includes realistic frequency components (alpha, beta, theta waves)
+   - Useful for testing without hardware
+   - Configurable noise and artifact levels
+
+### Device Selection
+
+Access the device settings from the main menu:
+1. Press `[S]` to open Settings scene
+2. Use `[↑/↓]` to navigate available devices
+3. Press `[ENTER]` to connect to selected device
+4. Press `[R]` to refresh device list
+5. Press `[ESC]` to return to menu
+
+### Architecture
+
+The device management system follows a clean architecture:
+
+- **`bci/devices.py`**: Device enumeration and information structures
+  - `DeviceType` enum for device types
+  - `DeviceInfo` dataclass for device metadata
+  - `enumerate_all_devices()` for device discovery
+
+- **`bci/dummy_provider.py`**: Synthetic data generator
+  - Threaded data generation matching real device rates
+  - Realistic signal characteristics
+  - Compatible with existing BCI workflows
+
+- **`trainer/utils/source_manager.py`**: Centralized device management
+  - Singleton pattern for global state
+  - Automatic device selection fallback
+  - Runtime device switching support
+
+- **`trainer/scenes/settings.py`**: Device selection UI
+  - MVC architecture (Model-View-Controller)
+  - Visual device browser
+  - Connection status display
+
+### Usage Example
+
+```python
+from trainer.utils.source_manager import source_manager
+from bci.devices import enumerate_all_devices
+
+# Enumerate available devices
+devices = enumerate_all_devices()
+print(f"Found {len(devices)} device(s)")
+
+# Select a device via source manager
+if devices:
+    source_manager.select_device(devices[0])
+    
+# Get current data source
+source = source_manager.get_source()
+if source:
+    data = source.read(n_samples=128)
+```
+
+### Benefits
+
+- ✅ **No Hardware Required**: Test with dummy device
+- ✅ **Multiple Devices**: Support for multiple Emotiv headsets
+- ✅ **Easy Switching**: Change devices without restarting
+- ✅ **Better Testing**: Dummy device enables CI/CD testing
+- ✅ **User-Friendly**: Visual device selection interface
+
 ## 🤖 ML Pipeline (Modulus) Documentation
 
 The Cogniflow project now includes an integrated ML Pipeline module called Modulus. For detailed documentation on the ML pipeline:

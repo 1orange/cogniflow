@@ -1,11 +1,12 @@
+"""Test script for MQTT publishing - simulates Live BCI output."""
 import paho.mqtt.client as mqtt
 import time
 
-# MQTT settings
-BROKER = "195.201.35.231"   # my mqtt
+# MQTT settings (should match Live scene defaults in live_model.py)
+BROKER = "195.201.35.231"
 PORT = 30183
 TOPIC = "car/control/"
-MESSAGE = "Hello from Python MQTT!"
+MESSAGE = "forward"  # Simulates a direction prediction
 
 # Callback when connected
 def on_connect(client, userdata, flags, rc):

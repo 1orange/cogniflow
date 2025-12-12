@@ -19,11 +19,13 @@ class MenuController:
             key: pygame key constant
 
         Returns:
-            str: Action to take ('calibrate', 'record', 'modulus', 'live', 'drive_bci', 'drive_arrow', 'quit', 'none')
+            str: Action to take ('settings', 'calibrate', 'record', 'modulus', 'live', 'drive_bci', 'drive_arrow', 'quit', 'none')
         """
         match key:
             case pg.K_ESCAPE:
                 return "quit"
+            case pg.K_s:
+                return "settings"
             case pg.K_c:
                 return "calibrate"
             case pg.K_r:

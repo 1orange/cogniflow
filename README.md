@@ -23,9 +23,9 @@ Brain–Computer Interface (BCI) driving trainer built with Pygame, integrated w
 ## Quick Start
 
 ### Requirements
-- Python 3.11+
+- Python 3.12+
 - Linux with HID support (tested on `linux 6.14.x`)
-- Emotiv EPOC device (Developer headset expected)
+- Emotiv EPOC device (optional - dummy device available for testing)
 
 Python dependencies are defined in `pyproject.toml`.
 
@@ -102,7 +102,36 @@ Outputs (per selected direction):
 Controls:
 - Throughout the wizard and recording: `[ESC]` to cancel/return.
 
-### 4) ML Pipeline / Modulus (`trainer/scenes/modulus.py`) ⭐ **NEW**
+### 4) Settings / Device (`trainer/scenes/settings.py`) ⭐ **NEW**
+Device selection and configuration scene.
+
+**Features:**
+- View all available EEG devices (Emotiv EPOC, Dummy)
+- Select which device to use for recording and BCI
+- Dummy device for testing without real hardware
+- Auto-detect connected devices
+
+**Supported Devices:**
+- 🧠 **Emotiv EPOC** - Real EEG headset (14 channels, 128 Hz)
+- 🔧 **Dummy Device** - Simulated data for testing/development
+
+**Usage:**
+1. Press `[S]` from main menu
+2. Use `[↑/↓]` to select a device
+3. Press `[ENTER]` to connect
+4. Press `[R]` to refresh device list
+5. Press `[ESC]` to return to menu
+
+**Dummy Device:**
+The dummy device generates synthetic EEG-like signals including:
+- Alpha waves (8-12 Hz)
+- Beta waves (12-30 Hz)
+- Theta waves (4-8 Hz)
+- Random noise and occasional artifacts
+
+This is useful for testing the application without requiring real EEG hardware.
+
+### 5) ML Pipeline / Modulus (`trainer/scenes/modulus.py`) ⭐
 Integrated interface for running the Modulus ML pipeline on recorded EEG data and browsing trained models.
 
 **Features:**
@@ -154,7 +183,7 @@ Controls (Browse Mode):
 - `[B]` - Switch to experiments mode
 - `[ESC]` - Return to menu
 
-### 5) Live BCI → MQTT (`trainer/scenes/live.py`) ⭐ **NEW**
+### 6) Live BCI → MQTT (`trainer/scenes/live.py`) ⭐
 Real-time BCI prediction to MQTT for controlling external devices (robots, cars, etc.).
 
 **Features:**
@@ -165,20 +194,13 @@ Real-time BCI prediction to MQTT for controlling external devices (robots, cars,
 - Real-time visualization of predictions and statistics
 
 **MQTT Message Format:**
-```json
-{
-  "direction": "forward",
-  "confidence": 0.85,
-  "timestamp": 1702389600.123
-}
+Simple direction string published to configured topic:
 ```
+forward
+```
+Possible values: `forward`, `backward`, `left`, `right`
 
-**Topics:**
-- `bci/car/` — Base topic with full state
-- `bci/car/forward` — Direction-specific topic
-- `bci/car/backward`
-- `bci/car/left`
-- `bci/car/right`
+**Default Topic:** `car/control/`
 
 **Usage:**
 1. Load a trained model via ML Pipeline `[M]` → Browse `[B]` → Select → `[ENTER]`
@@ -198,7 +220,10 @@ Controls (Running mode):
 - `[SPACE]` — Stop session
 - `[ESC]` — Return to menu
 
-### 6) Driving (`trainer/scenes/driving.py`)
+**Logging:**
+Detailed logs are written to `logs/live_bci_YYYYMMDD_HHMMSS.log` for debugging.
+
+### 7) Driving (`trainer/scenes/driving.py`)
 Pseudo‑3D driving simulator with a fixed virtual resolution scaled to the window.
 - Modes: `BCI` or `Arrow` control.
 - HUD shows: mode, active commands, last label + confidence (BCI), speed, and a periodic "gate" cue arrow.
@@ -212,13 +237,14 @@ Controls:
 ## Order of All Buttons/Keys
 
 ### Menu (on‑screen order)
-1. `[C] Calibrate`
-2. `[R] Record Data`
-3. `[M] ML Pipeline (Modulus)` ⭐
-4. `[L] Live BCI → MQTT` ⭐ **NEW**
-5. `[D] Drive (BCI)`
-6. `[A] Drive (Arrow Keys)`
-7. `[ESC] Quit`
+1. `[S] Settings / Device` ⭐ **NEW** - Select EEG device
+2. `[C] Calibrate`
+3. `[R] Record Data`
+4. `[M] ML Pipeline (Modulus)` ⭐
+5. `[L] Live BCI → MQTT` ⭐
+6. `[D] Drive (BCI)`
+7. `[A] Drive (Arrow Keys)`
+8. `[ESC] Quit`
 
 ### Record wizard
 - Select directions: `[1]..[4]` toggles, `[ENTER]` continue, `[ESC]` cancel
@@ -244,6 +270,12 @@ Controls:
 - `[C]` - Copy model to model.pkl
 - `[R]` - Refresh model list
 - `[B]` - Switch to experiments mode
+- `[ESC]` - Return to menu
+
+### Settings / Device Selection
+- `[↑/↓]` - Navigate device list
+- `[ENTER]` - Connect to selected device
+- `[R]` - Refresh device list
 - `[ESC]` - Return to menu
 
 ### Live BCI → MQTT (Config Mode)
@@ -290,14 +322,20 @@ cogniflow/
 │  │  ├─ modulus.py        # ModulusScene (ML pipeline interface) ⭐ NEW
 │  │  ├─ modulus_model.py  # Model for ModulusScene (MVC)
 │  │  ├─ modulus_view.py   # View for ModulusScene (MVC)
-│  │  └─ modulus_controller.py  # Controller for ModulusScene (MVC)
+│  │  ├─ modulus_controller.py  # Controller for ModulusScene (MVC)
+│  │  ├─ settings.py       # SettingsScene (device selection) ⭐ NEW
+│  │  ├─ settings_model.py # Model for SettingsScene (MVC)
+│  │  ├─ settings_view.py  # View for SettingsScene (MVC)
+│  │  └─ settings_controller.py  # Controller for SettingsScene (MVC)
 │  └─ utils/
 │     ├─ base_scene.py     # (duplicate helper used in utils scope)
 │     ├─ car.py            # Car physics and sprite
-│     └─ source_manager.py # Initializes EEG data provider
+│     └─ source_manager.py # Device management and data provider initialization ⭐ UPDATED
 ├─ bci/
 │  ├─ utils.py             # LABELS and majority vote helper
 │  ├─ data_provider.py     # Threaded buffer over Emotiv EEGReader
+│  ├─ devices.py           # Device enumeration and management ⭐ NEW
+│  ├─ dummy_provider.py    # Synthetic EEG data generator ⭐ NEW
 │  └─ emotiv/              # Low‑level EPOC access (HID, AES, parsing)
 │     ├─ reader.py         # High‑level EEGReader API
 │     ├─ device.py         # Enumerate/open HID interfaces

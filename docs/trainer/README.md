@@ -60,25 +60,32 @@ python main.py
 
 ### Quick Start Workflow
 
-1. **Connect your Emotiv EPOC headset**
-   - Ensure all sensors have good contact (quality > 3)
-   - Check battery level (> 20%)
-
-2. **Launch the application**
+1. **Launch the application**
    ```bash
    poetry run python main.py
    ```
 
-3. **Calibrate (First time)**
+2. **Select a device** ⭐ **NEW**
+   - Press `S` to open device settings
+   - Choose between Emotiv EPOC (if connected) or Dummy Device
+   - Press `ENTER` to connect
+   - Press `ESC` to return to menu
+
+3. **Connect your Emotiv EPOC headset** (if using real device)
+   - Ensure all sensors have good contact (quality > 3)
+   - Check battery level (> 20%)
+   - Press `R` in Settings to refresh if not detected
+
+4. **Calibrate (First time)**
    - Press `C` to enter calibration mode
    - Follow on-screen arrows for each direction
    - Wait for model training to complete
 
-4. **Drive with BCI**
+5. **Drive with BCI**
    - Press `D` to enter BCI driving mode
    - Think about the calibrated directions to control the car
 
-5. **Practice with Arrow Keys**
+6. **Practice with Arrow Keys**
    - Press `A` to practice with keyboard controls
    - Get familiar with the game physics
 
@@ -92,12 +99,13 @@ trainer/
 ├── scenes/                  # Game scenes
 │   ├── base_scene.py        # Base class for all scenes
 │   ├── menu.py              # Main menu
+│   ├── settings.py          # Device selection ⭐ NEW
 │   ├── calibration.py       # BCI calibration
 │   ├── record.py            # Data recording
 │   └── driving.py           # Driving game
 ├── utils/                   # Utility classes
 │   ├── car.py               # Car physics and rendering
-│   └── source_manager.py    # EEG source management
+│   └── source_manager.py    # Device management and EEG source ⭐ UPDATED
 └── assets/                  # Game assets
     ├── car.png              # Car sprite
     ├── road.png             # Road texture
@@ -112,20 +120,43 @@ trainer/
 Each scene is a self-contained game state:
 
 - **MenuScene**: Main navigation hub
+- **SettingsScene**: Device selection and configuration ⭐ **NEW**
 - **CalibrationScene**: BCI model training
 - **RecordScene**: Raw data collection
 - **DrivingScene**: Main gameplay
 
-#### 2. EEG Processing Pipeline
+#### 2. Device Management
+
+The application uses a centralized `SourceManager` to handle device selection:
 
 ```
-Emotiv Headset
+Device Enumeration (bci/devices.py)
      ↓
-USB HID Reader (Rust)
+SourceManager (trainer/utils/source_manager.py)
      ↓
-AES Decryption (Rust)
+Device Selection (Settings Scene)
      ↓
-Python EEG Reader
+Data Provider Initialization
+     ├─ Emotiv EPOC → DataProvider
+     └─ Dummy Device → DummyDataProvider
+```
+
+**Key Components:**
+- `bci/devices.py`: Device enumeration and information structures
+- `bci/dummy_provider.py`: Synthetic EEG data generator
+- `trainer/utils/source_manager.py`: Centralized device management (singleton)
+- `trainer/scenes/settings.py`: Device selection UI (MVC architecture)
+
+#### 3. EEG Processing Pipeline
+
+```
+Selected Device (Emotiv or Dummy)
+     ↓
+USB HID Reader (Rust) / Synthetic Generator
+     ↓
+AES Decryption (Rust) / Direct Signal Generation
+     ↓
+Python EEG Reader / Dummy Provider
      ↓
 Signal Buffering
      ↓
@@ -138,7 +169,7 @@ Majority Voting
 Car Control Commands
 ```
 
-#### 3. Car Physics
+#### 4. Car Physics
 
 Pseudo-3D racing physics with:
 - Acceleration/deceleration
@@ -153,6 +184,7 @@ Pseudo-3D racing physics with:
 **Purpose:** Main navigation and system status
 
 **Controls:**
+- `S` - Open device settings ⭐ **NEW**
 - `C` - Enter calibration mode
 - `R` - Enter data recording mode
 - `D` - Drive with BCI (requires calibrated model)
@@ -160,11 +192,52 @@ Pseudo-3D racing physics with:
 - `ESC` - Quit application
 
 **Display Information:**
-- Source: EMOTIV EPOC
+- Current device name (Emotiv EPOC or Dummy Device)
 - Sample rate and channel count
 - Model availability status
 
-### 2. Calibration Scene
+### 2. Settings Scene ⭐ **NEW**
+
+**Purpose:** Select and configure EEG data sources
+
+**Features:**
+- View all available devices (Emotiv EPOC, Dummy Device)
+- Select which device to use for recording and BCI
+- Refresh device list to detect newly connected devices
+- Visual device browser with connection status
+
+**Supported Devices:**
+- 🧠 **Emotiv EPOC** - Real EEG headset (14 channels, 128 Hz)
+  - Automatic detection via HID enumeration
+  - Shows device serial numbers and VID/PID
+- 🔧 **Dummy Device** - Simulated data for testing/development
+  - Generates synthetic EEG-like signals
+  - Includes alpha, beta, and theta waves
+  - Useful for testing without hardware
+
+**Controls:**
+- `↑/↓` - Navigate device list
+- `ENTER` - Connect to selected device
+- `R` - Refresh device list
+- `ESC` - Return to menu
+
+**Usage:**
+1. Press `S` from main menu
+2. Use arrow keys to select a device
+3. Press `ENTER` to connect
+4. Press `R` to refresh if device not detected
+5. Press `ESC` to return
+
+**Dummy Device:**
+The dummy device generates synthetic EEG-like signals including:
+- Alpha waves (8-12 Hz) - dominant when relaxed
+- Beta waves (12-30 Hz) - active thinking
+- Theta waves (4-8 Hz) - drowsy/meditative states
+- Random noise and occasional artifacts
+
+This is useful for testing the application without requiring real EEG hardware.
+
+### 3. Calibration Scene
 
 **Purpose:** Train the BCI model by recording labeled EEG data
 
@@ -202,7 +275,7 @@ Pseudo-3D racing physics with:
 - `forward` - Think about moving forward
 - `brake` - Think about stopping
 
-### 3. Record Scene
+### 4. Record Scene
 
 **Purpose:** Record raw EEG data for analysis
 
@@ -236,7 +309,7 @@ Pseudo-3D racing physics with:
 - Window length: `WIN_SEC * SAMPLE_RATE` samples
 - Channels: 14 EEG sensors from EPOC
 
-### 4. Driving Scene
+### 5. Driving Scene
 
 **Purpose:** Main gameplay - drive the car in a pseudo-3D environment
 

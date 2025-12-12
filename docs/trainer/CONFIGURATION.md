@@ -15,11 +15,23 @@ Complete reference for all configuration parameters in `config.py`.
 
 ## Data Source
 
-### `DATA_SOURCE`
+### Device Selection
+
+Device selection is now handled through the Settings scene (`[S]` from main menu) rather than configuration files. The application supports:
+
+- **Emotiv EPOC**: Real EEG headset (14 channels, 128 Hz)
+- **Dummy Device**: Synthetic data generator for testing
+
+Device selection is managed by `SourceManager` (singleton pattern) and persists across scenes.
+
+### Legacy `DATA_SOURCE` (Deprecated)
+
+**Note:** The `DATA_SOURCE` configuration parameter is deprecated. Use the Settings scene to select devices instead.
+
 - **Type:** `str`
 - **Default:** `"emotiv"`
-- **Description:** EEG data source identifier
-- **Options:** `"emotiv"` (only supported source currently)
+- **Description:** Legacy EEG data source identifier
+- **Options:** `"emotiv"` (deprecated - use Settings scene)
 
 ## EEG Parameters
 

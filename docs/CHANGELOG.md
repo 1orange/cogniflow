@@ -27,6 +27,30 @@ Each dated changelog contains comprehensive information including:
 
 ### Added
 
+#### Device Management System
+- **Device Enumeration**: New unified device management system (`bci/devices.py`)
+  - Automatic detection of Emotiv EPOC devices via HID enumeration
+  - Support for multiple device types (Emotiv EPOC, Dummy)
+  - Device information structure with VID/PID, serial numbers, and availability status
+  - Display names with emoji indicators (🧠 for Emotiv, 🔧 for Dummy)
+- **Dummy Data Provider**: Synthetic EEG data generator (`bci/dummy_provider.py`)
+  - Generates realistic EEG-like signals for testing without hardware
+  - Includes alpha waves (8-12 Hz), beta waves (12-30 Hz), theta waves (4-8 Hz)
+  - Configurable noise levels and artifact probability
+  - Threaded data generation matching real device sample rates (128 Hz)
+  - Compatible with all existing BCI training workflows
+- **Settings Scene**: New device selection interface (`trainer/scenes/settings.py`)
+  - Interactive device browser with visual selection
+  - Real-time device scanning and refresh
+  - Device connection status display
+  - MVC architecture (SettingsModel, SettingsView, SettingsController)
+  - Accessible from main menu via `[S]` key
+- **Source Manager**: Centralized device management (`trainer/utils/source_manager.py`)
+  - Singleton pattern for global device state
+  - Automatic device selection fallback (real devices preferred over dummy)
+  - Device switching without application restart
+  - Unified interface for all data providers
+
 #### Preprocessing Experiment Enhancements
 - **Split Ratio Testing**: Experiments now automatically test both 70/15/15 and 80/10/10 data splits
   - Results include comparison visualizations
@@ -52,6 +76,21 @@ Each dated changelog contains comprehensive information including:
   - Best configurations report includes split ratio analysis
 
 ### Changed
+
+#### Dependencies
+- **Python Version**: Updated to Python 3.12+ (was 3.11+)
+  - Aligned with RAPIDS 25.10 compatibility
+  - Updated `pyproject.toml` requirements
+- **New Dependencies**: Added `xgboost` for gradient boosting models
+  - Version: `^3.1.2`
+  - Available for ML pipeline experiments
+
+#### Device Initialization
+- **Source Management**: Refactored from direct device instantiation to SourceManager pattern
+  - All scenes now use `source_manager` singleton
+  - Devices selected through Settings scene instead of hardcoded
+  - Supports runtime device switching
+  - Better error handling and device state management
 
 #### Experiment Execution
 - **Experiment Count**: Full mode now runs 800+ experiments (was 400+)

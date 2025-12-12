@@ -9,10 +9,14 @@ class MenuModel:
     def __init__(self):
         self.model_path = "models/model.pkl"
         self.source_info = {
-            "name": "EMOTIV EPOC",
+            "name": "No device",
             "sample_rate": None,
             "channels": None,
         }
+        # Device info
+        self.device_name = "No device selected"
+        self.is_dummy_device = False
+        
         # Loaded model info from model store
         self.loaded_model_name = None
         self.loaded_model_accuracy = None
@@ -21,6 +25,12 @@ class MenuModel:
         """Update source information."""
         self.source_info["sample_rate"] = sample_rate
         self.source_info["channels"] = channels
+        
+    def set_device_info(self, device_name: str, is_dummy: bool):
+        """Update device information."""
+        self.device_name = device_name
+        self.is_dummy_device = is_dummy
+        self.source_info["name"] = device_name
     
     def update_model_status(self, model_store):
         """Update model status from the model store."""
