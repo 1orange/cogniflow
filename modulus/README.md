@@ -1,10 +1,30 @@
-# Modular Machine Learning Pipeline (Clean Architecture Edition)
+# Modulus — ML Pipeline for Cogniflow
 
-A production-ready, modular ML pipeline built using **Clean Code Architecture** principles. Supports datasets stored as multiple `.npy` files with embedded metadata, reproducible data splitting, preprocessing, multi-model training, and benchmarking.
+> **Part of the [Cogniflow](../README.md) BCI Training System**
+
+Modulus is the integrated machine learning pipeline module for EEG data analysis and model training within Cogniflow. It follows **Clean Architecture** principles and supports reproducible ML workflows.
+
+## Integration with Cogniflow
+
+Modulus is fully integrated with the Cogniflow BCI trainer:
+
+### Using via Pygame Interface (Recommended)
+
+1. Launch Cogniflow: `poetry run python main.py`
+2. Press `[M]` to enter the **ML Pipeline (Modulus)** screen
+3. Configure experiments using the UI
+4. Run training and view results
+
+### Using via CLI (Standalone)
+
+```bash
+# From cogniflow root directory
+poetry run python -m modulus.cli --config modulus/config/example_config.yaml
+```
 
 ## Features
 
-- **Clean Architecture**: Separation of concerns with distinct Domain, Application, Infrastructure, and Presentation layers
+- **Clean Architecture**: Separation of concerns with distinct Domain, Application, Infrastructure layers
 - **Multiple Data Sources**: Support for `.npy` files with embedded metadata
 - **Reproducible Workflows**: Configurable data splitting with seed control
 - **Flexible Preprocessing**: Custom and standard preprocessing pipelines
@@ -16,35 +36,56 @@ A production-ready, modular ML pipeline built using **Clean Code Architecture** 
 
 ```
 +--------------------------+
-|        Presentation      |   <- CLI / API Interface Layer
+|   Presentation Layer     |   <- ModulusScene (Pygame UI) / CLI
 +--------------------------+
-|      Application Core    |   <- Use Cases (Pipeline Execution, Reporting)
+|   Application Core       |   <- Use Cases (Pipeline Execution)
 +--------------------------+
-|         Domain           |   <- Entities (Dataset, ModelConfig, Metrics)
+|   Domain                 |   <- Entities (Dataset, ModelConfig)
 +--------------------------+
-|   Infrastructure / I/O   |   <- Data Access (npy, CSV, JSON), ML Frameworks
+|   Infrastructure / I/O   |   <- Data Access, ML Frameworks
 +--------------------------+
-```
-
-## Installation
-
-```bash
-pip install -r requirements.txt
 ```
 
 ## Quick Start
 
-1. **Prepare your data**: Place `.npy` files in a directory (e.g., `data/`)
-   - Each file should contain a dictionary with `features`, `labels`, and optional `metadata`
+### Prerequisites
 
-2. **Configure the pipeline**: Create a `config.yaml` file (see `config/example_config.yaml`)
+- Cogniflow installed via poetry (see [main README](../README.md))
+- EEG data recorded using the Record scene (or your own `.npy` data)
 
-3. **Run the pipeline**:
+### Typical Workflow
+
 ```bash
-python -m modulus.cli --config config.yaml
+# 1. Record EEG data using Cogniflow Record scene
+#    Files saved to: data/recorded_data_<direction>_<timestamp>.npy
+
+# 2. Prepare data for ML pipeline
+poetry run python modulus/prepare_direction_data.py --mode multiclass
+
+# 3. Run pipeline via CLI
+poetry run python -m modulus.cli --config modulus/config/forward_direction_config.yaml
+
+# 4. View results
+xdg-open modulus/results/forward_direction/results.html
 ```
 
-## Configuration Example
+### Using the Pygame Interface
+
+The ModulusScene provides an interactive UI for ML experiments:
+
+- `[UP]/[DOWN]` — Select experiment mode (Binary/Multiclass/Both)
+- `[Q]` — Toggle Quick Mode (faster, fewer iterations)
+- `[H]` — Toggle Hyperparameter Tuning
+- `[ENTER]` — Run experiments
+- `[ESC]` — Return to menu
+
+Results are saved to:
+- `results/experiments_{mode}_{timestamp}/` — Experiment outputs
+- `models/` — Trained model files (`.pkl`)
+
+## Configuration
+
+Configuration files are in `modulus/config/`:
 
 ```yaml
 Data:
@@ -52,7 +93,6 @@ Data:
   loader: "npy"
   feature_key: "features"
   target_key: "labels"
-  use_metadata: true
   split:
     train: 0.7
     val: 0.15
@@ -61,7 +101,7 @@ Data:
 
 Preprocessing:
   standard_scaler: true
-  pca_components: null
+  pca_components: 100
 
 Models:
   - name: "LogisticRegression"
@@ -70,110 +110,66 @@ Models:
   - name: "RandomForest"
     params:
       n_estimators: 100
-      random_state: 42
 
 Output:
   path: "results/"
   formats: ["csv", "json", "html"]
 ```
 
+## GPU Support (Optional)
+
+GPU acceleration via cuML/CuPy is optional and falls back to CPU if unavailable:
+
+```bash
+# Install with GPU support
+poetry install -E gpu
+
+# Run with GPU
+poetry run python -m modulus.cli --config config.yaml --use-gpu
+```
+
 ## Project Structure
 
 ```
 modulus/
-├── domain/                 # Domain entities (pure Python, no frameworks)
-│   ├── __init__.py
-│   ├── entities.py         # Dataset, SplitConfig, ModelSpec, MetricSet
-│   └── protocols.py        # Interface definitions
-├── application/            # Use cases and business logic
-│   ├── __init__.py
-│   ├── pipeline_runner.py  # Main orchestrator
-│   ├── data_manager.py     # Data loading and splitting
-│   ├── preprocessing_manager.py
-│   ├── trainer.py          # Model training
-│   ├── benchmark_manager.py
-│   └── reporting_manager.py
-├── infrastructure/         # External framework integrations
-│   ├── __init__.py
-│   ├── loaders/
-│   │   ├── __init__.py
-│   │   └── npy_loader.py   # .npy file loading
-│   ├── storage/
-│   │   ├── __init__.py
-│   │   ├── csv_writer.py
-│   │   ├── json_writer.py
-│   │   └── html_writer.py
-│   └── ml/
-│       ├── __init__.py
-│       └── sklearn_adapter.py
-├── presentation/           # User interfaces
-│   ├── __init__.py
-│   └── cli.py              # Command-line interface
-├── container.py            # Dependency injection
-├── config.py               # Configuration handling
-└── cli.py                  # CLI entry point
-
-tests/                      # Test suite
-├── unit/
-├── integration/
-└── e2e/
+├── modulus/                 # Core ML pipeline framework
+│   ├── domain/              # Domain entities and protocols
+│   ├── application/         # Use cases and business logic
+│   ├── infrastructure/      # Data loaders, ML adapters, storage
+│   ├── config.py            # Configuration handling
+│   └── container.py         # Dependency injection
+├── config/                  # Pipeline configuration files
+├── docs/                    # ML pipeline documentation
+├── tests/                   # ML pipeline tests
+├── prepare_direction_data.py  # Data preparation script
+└── run_forward_pipeline.py    # Standalone pipeline runner
 ```
+
+## Documentation
+
+- **[Documentation Index](docs/INDEX.md)** — Complete docs overview
+- **[Quick Start](docs/quick-start.md)** — Get started guide
+- **[Preprocessing Modes](docs/preprocessing-modes.md)** — Forward-only vs multiclass
+- **[Custom Preprocessing](docs/custom-preprocessing.md)** — Add your own techniques
+- **[System Design (SDD)](SDD.md)** — Architecture deep-dive
 
 ## Testing
 
 ```bash
-# Run all tests
-pytest
+# Run from cogniflow root
+cd modulus
+poetry run pytest
 
-# Run with coverage
-pytest --cov=modulus --cov-report=html
-
-# Run specific test suite
-pytest tests/unit/
-pytest tests/integration/
-pytest tests/e2e/
+# With coverage
+poetry run pytest --cov=modulus --cov-report=html
 ```
 
-## Development
+## See Also
 
-### Type Checking
-```bash
-mypy modulus/
-```
-
-### Adding a New Data Source
-
-1. Implement the `IDataLoader` protocol in `infrastructure/loaders/`
-2. Register it in the dependency container
-3. Update configuration schema
-
-### Adding a New Model
-
-Simply add it to your `config.yaml`:
-```yaml
-Models:
-  - name: "YourModel"
-    params:
-      param1: value1
-```
-
-## Design Principles
-
-- **Dependency Inversion**: High-level modules don't depend on low-level modules
-- **Single Responsibility**: Each class has one reason to change
-- **Open/Closed**: Open for extension, closed for modification
-- **Interface Segregation**: Clients depend only on interfaces they use
-- **Dependency Injection**: Dependencies are injected, not created internally
+- [Cogniflow Main README](../README.md) — Full project documentation
+- [ModulusScene](../trainer/scenes/modulus.py) — Pygame integration
+- [Experiment Features](../docs/modulus/EXPERIMENT_FEATURES.md) — UI experiment guide
 
 ## License
 
-MIT
-
-## Contributing
-
-Contributions are welcome! Please ensure:
-- Code follows Clean Architecture principles
-- All tests pass
-- Type hints are included
-- Documentation is updated
-
+Part of the Cogniflow project. See [main README](../README.md) for license information.

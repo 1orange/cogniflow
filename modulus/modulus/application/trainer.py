@@ -11,6 +11,10 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 
 from modulus.domain.entities import ModelSpec
+from modulus.infrastructure.ml.gpu_utils import (
+    detect_gpu_stack,
+    to_cpu_array,
+)
 
 
 class Trainer:
@@ -33,9 +37,34 @@ class Trainer:
         "KNeighborsClassifier": KNeighborsClassifier,
     }
 
-    def __init__(self):
+    GPU_MODEL_REGISTRY = {
+        # Map model name to a callable that returns the cuML class
+        "LogisticRegression": lambda cuml: cuml.linear_model.LogisticRegression,
+        "RandomForest": lambda cuml: cuml.ensemble.RandomForestClassifier,
+        "RandomForestClassifier": lambda cuml: cuml.ensemble.RandomForestClassifier,
+        "SVC": lambda cuml: cuml.svm.SVC,
+        "SVM": lambda cuml: cuml.svm.SVC,
+        "KNN": lambda cuml: cuml.neighbors.KNeighborsClassifier,
+        "KNeighborsClassifier": lambda cuml: cuml.neighbors.KNeighborsClassifier,
+    }
+
+    def __init__(self, use_gpu: bool = False, device_id: Optional[int] = None):
         """Initialize trainer."""
         self.trained_models: Dict[str, Any] = {}
+        self.use_gpu = use_gpu
+        self.device_id = device_id
+        self._gpu_state = detect_gpu_stack(device_id) if use_gpu else {"available": False}
+        # Track which models are actually using GPU backends
+        self._model_use_gpu: Dict[str, bool] = {}
+
+        if self.use_gpu and not self._gpu_state.get("available"):
+            # Graceful fallback to CPU if GPU stack is missing
+            fallback_reason = self._gpu_state.get("error") or "GPU stack not available"
+            print(f"[Trainer] GPU requested but unavailable: {fallback_reason}. Falling back to CPU.")
+            self.use_gpu = False
+        elif self.use_gpu:
+            device_name = self._gpu_state.get("device") or "CUDA device"
+            print(f"[Trainer] Using GPU backend on {device_name} (cuML).")
 
     def fit_all(
         self,
@@ -59,10 +88,9 @@ class Trainer:
         pipelines = {}
 
         for spec in model_specs:
-            print(f"Training {spec.name}...")
-
             # Create model instance
-            model = self._create_model(spec)
+            model, model_is_gpu = self._create_model(spec)
+            self._model_use_gpu[spec.name] = model_is_gpu
 
             # Create pipeline with preprocessor if provided
             if preprocessor is not None:
@@ -76,7 +104,14 @@ class Trainer:
                 pipeline = Pipeline([("model", model)])
 
             # Train the pipeline
-            pipeline.fit(X_train, y_train)
+            X_fit = X_train
+            y_fit = y_train
+            if self.use_gpu and not model_is_gpu:
+                # CPU model but data is likely on GPU; bring back to CPU
+                X_fit = self._to_numpy(X_train)
+                y_fit = self._to_numpy(y_train)
+
+            pipeline.fit(X_fit, y_fit)
             pipelines[spec.name] = pipeline
 
             self.trained_models[spec.name] = pipeline
@@ -102,18 +137,23 @@ class Trainer:
         probabilities = {}
 
         for name, pipeline in pipelines.items():
+            model_is_gpu = self._model_use_gpu.get(name, False)
+            X_input = X
+            if self.use_gpu and not model_is_gpu:
+                X_input = self._to_numpy(X)
+
             # Get predictions
-            predictions[name] = pipeline.predict(X)
+            predictions[name] = self._to_numpy(pipeline.predict(X_input))
 
             # Get probabilities if available
             if hasattr(pipeline.named_steps["model"], "predict_proba"):
-                probabilities[name] = pipeline.predict_proba(X)
+                probabilities[name] = self._to_numpy(pipeline.predict_proba(X_input))
             else:
                 probabilities[name] = None
 
         return predictions, probabilities
 
-    def _create_model(self, spec: ModelSpec) -> Any:
+    def _create_model(self, spec: ModelSpec) -> tuple[Any, bool]:
         """
         Create a model instance from specification.
 
@@ -129,11 +169,41 @@ class Trainer:
                 f"Available models: {list(self.MODEL_REGISTRY.keys())}"
             )
 
+        params = spec.params.copy()
+
+        # Prefer GPU backend if requested and available
+        if self.use_gpu and self._gpu_state.get("available"):
+            gpu_factory = self.GPU_MODEL_REGISTRY.get(spec.name)
+            if gpu_factory:
+                cuml = self._gpu_state["cuml"]
+                model_class = gpu_factory(cuml)
+                print(f"[Trainer] {spec.name}: cuML backend enabled.")
+                # Drop params unsupported by cuML
+                params.pop("random_state", None)
+                params.pop("n_jobs", None)
+                return model_class(**params), True
+            else:
+                print(f"[Trainer] GPU requested but {spec.name} not available in cuML. Using CPU model.")
+
         model_class = self.MODEL_REGISTRY[spec.name]
 
-        # Handle probability=True for SVC
-        params = spec.params.copy()
+        # Handle probability=True for SVC (sklearn only)
         if model_class == SVC and "probability" not in params:
             params["probability"] = True
 
-        return model_class(**params)
+        return model_class(**params), False
+
+    def _to_numpy(self, array: Any) -> np.ndarray:
+        """Convert CuPy/cuDF outputs to numpy for downstream metrics."""
+        array = to_cpu_array(array)
+        if hasattr(array, "to_numpy"):
+            try:
+                return array.to_numpy()
+            except Exception:  # noqa: BLE001
+                pass
+        if hasattr(array, "values"):
+            try:
+                return np.asarray(array.values)
+            except Exception:  # noqa: BLE001
+                pass
+        return np.asarray(array)

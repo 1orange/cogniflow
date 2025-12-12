@@ -32,12 +32,16 @@ class DependencyContainer:
         # Build application layer components
         data_manager = DataManager(data_loader)
 
-        preprocessing_manager = PreprocessingManager(config.preprocessing_config)
+        preprocessing_manager = PreprocessingManager(
+            config.preprocessing_config,
+            use_gpu=config.use_gpu,
+            device_id=config.device_id,
+        )
 
         task_type = config.data_config.get("task_type", "classification")
         benchmark_manager = BenchmarkManager(task_type=task_type)
 
-        trainer = Trainer()
+        trainer = Trainer(use_gpu=config.use_gpu, device_id=config.device_id)
 
         reporting_manager = ReportingManager()
 

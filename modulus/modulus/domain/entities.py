@@ -99,6 +99,8 @@ class PipelineConfig:
     preprocessing_config: Dict[str, Any]
     model_specs: list[ModelSpec]
     output_config: Dict[str, Any]
+    use_gpu: bool = False
+    device_id: Optional[int] = None
 
     @classmethod
     def from_dict(cls, config_dict: Dict[str, Any]) -> "PipelineConfig":
@@ -108,9 +110,13 @@ class PipelineConfig:
             for m in config_dict.get("Models", [])
         ]
 
+        compute_config = config_dict.get("Compute", {})
+
         return cls(
             data_config=config_dict.get("Data", {}),
             preprocessing_config=config_dict.get("Preprocessing", {}),
             model_specs=model_specs,
             output_config=config_dict.get("Output", {}),
+            use_gpu=compute_config.get("use_gpu", False),
+            device_id=compute_config.get("device_id"),
         )

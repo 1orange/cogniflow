@@ -103,39 +103,102 @@ Controls:
 - Throughout the wizard and recording: `[ESC]` to cancel/return.
 
 ### 4) ML Pipeline / Modulus (`trainer/scenes/modulus.py`) ⭐ **NEW**
-Integrated interface for running the Modulus ML pipeline on recorded EEG data.
+Integrated interface for running the Modulus ML pipeline on recorded EEG data and browsing trained models.
 
 **Features:**
-- Configuration file selection from `modulus/config/` directory
-- Visual pipeline execution with progress updates
+- Run preprocessing experiments (binary, multiclass, or both modes)
+- Two-phase optimized workflow with selective hyperparameter tuning
+- Visual pipeline execution with progress bar and phase indicator
+- **Model Browser**: Browse and load trained models from experiments
 - Results display and error handling
 - Follows MVC architecture (Model-View-Controller)
 
-**Usage:**
-1. Select a configuration file using `[UP]/[DOWN]` arrows
-2. Press `[ENTER]` to run the pipeline
-3. View progress and results
-4. Press `[ESC]` to return to menu
+**Experiments Mode Usage:**
+1. Select experiment mode using `[UP]/[DOWN]` (Binary, Multiclass, Both)
+2. Configure options: `[Q]` Quick mode, `[H]` Hyperparameter tuning
+3. Adjust parameters: `[+/-]` CPUs, `[T/Y]` Top-K, `[F/G]` CV Folds
+4. Press `[ENTER]` to run experiments
+5. View progress and results
+6. Results saved to `results/experiments_*/`
 
-**Configuration Files:**
-- Located in `modulus/config/` directory
-- Examples: `example_config.yaml`, `forward_direction_config.yaml`, `eeg_full_preprocessing_config.yaml`
-- See `modulus/docs/` for detailed configuration guide
+**Model Browser Usage:**
+1. Press `[B]` to enter Browse Mode
+2. Navigate models with `[UP]/[DOWN]`
+3. Press `[ENTER]` to load a model
+4. Press `[C]` to copy model to `models/model.pkl` for driving
 
 **Pipeline Steps:**
-1. Load data from `data/` directory
-2. Split into train/validation/test sets
-3. Apply preprocessing pipeline
-4. Train multiple models
-5. Evaluate on validation and test sets
-6. Export results to `modulus/results/`
+1. Load data from `data/prepared/` directory
+2. Split into train/validation/test sets (70/15/15 and 80/10/10)
+3. Apply preprocessing pipelines (all combinations)
+4. Train multiple models (LogisticRegression, SVM, DecisionTree, RandomForest)
+5. Evaluate and select best configuration
+6. Export results to `results/experiments_*/`
 
-Controls:
-- `[UP]/[DOWN]` - Navigate configuration files
-- `[ENTER]` - Run selected pipeline
+Controls (Experiments Mode):
+- `[UP]/[DOWN]` - Select experiment mode
+- `[Q]` - Toggle quick mode
+- `[H]` - Toggle hyperparameter tuning
+- `[T/Y]` - Decrease/increase top-K (when tuning enabled)
+- `[F/G]` - Decrease/increase CV folds (when tuning enabled)
+- `[+/-]` - Adjust CPU count
+- `[ENTER]` - Run experiments
+- `[B]` - Switch to browse mode
 - `[ESC]` - Return to menu
 
-### 5) Driving (`trainer/scenes/driving.py`)
+Controls (Browse Mode):
+- `[UP]/[DOWN]` - Navigate model list
+- `[ENTER]` - Load selected model
+- `[C]` - Copy model to model.pkl
+- `[R]` - Refresh model list
+- `[B]` - Switch to experiments mode
+- `[ESC]` - Return to menu
+
+### 5) Live BCI → MQTT (`trainer/scenes/live.py`) ⭐ **NEW**
+Real-time BCI prediction to MQTT for controlling external devices (robots, cars, etc.).
+
+**Features:**
+- Reads raw EEG data from Emotiv EPOC
+- Predicts direction using loaded ML model
+- Publishes predictions to MQTT broker
+- Configurable broker, port, topic, and confidence threshold
+- Real-time visualization of predictions and statistics
+
+**MQTT Message Format:**
+```json
+{
+  "direction": "forward",
+  "confidence": 0.85,
+  "timestamp": 1702389600.123
+}
+```
+
+**Topics:**
+- `bci/car/` — Base topic with full state
+- `bci/car/forward` — Direction-specific topic
+- `bci/car/backward`
+- `bci/car/left`
+- `bci/car/right`
+
+**Usage:**
+1. Load a trained model via ML Pipeline `[M]` → Browse `[B]` → Select → `[ENTER]`
+2. Press `[L]` to enter Live scene
+3. Configure MQTT: `[1]` Broker, `[2]` Port, `[3]` Topic, `[4]` Confidence threshold
+4. Press `[C]` to connect to MQTT broker
+5. Press `[ENTER]` to start live session
+6. Predictions are published in real-time
+
+Controls (Config mode):
+- `[1-4]` — Edit configuration fields
+- `[C]` — Connect to MQTT broker
+- `[ENTER]` — Start live session
+- `[ESC]` — Return to menu
+
+Controls (Running mode):
+- `[SPACE]` — Stop session
+- `[ESC]` — Return to menu
+
+### 6) Driving (`trainer/scenes/driving.py`)
 Pseudo‑3D driving simulator with a fixed virtual resolution scaled to the window.
 - Modes: `BCI` or `Arrow` control.
 - HUD shows: mode, active commands, last label + confidence (BCI), speed, and a periodic "gate" cue arrow.
@@ -152,18 +215,48 @@ Controls:
 1. `[C] Calibrate`
 2. `[R] Record Data`
 3. `[M] ML Pipeline (Modulus)` ⭐
-4. `[D] Drive (BCI)`
-5. `[A] Drive (Arrow Keys)`
-6. `[ESC] Quit`
+4. `[L] Live BCI → MQTT` ⭐ **NEW**
+5. `[D] Drive (BCI)`
+6. `[A] Drive (Arrow Keys)`
+7. `[ESC] Quit`
 
 ### Record wizard
 - Select directions: `[1]..[4]` toggles, `[ENTER]` continue, `[ESC]` cancel
 - Window duration: `[UP]/[DOWN]` ±0.5s, `[RIGHT]/[LEFT]` ±0.1s, `[ENTER]` continue, `[ESC]` cancel
 - Trials per direction: `[UP]/[DOWN]`, `[ENTER]` continue, `[ESC]` cancel
 
-### Modulus ML Pipeline
-- `[UP]/[DOWN]` - Select configuration file
-- `[ENTER]` - Run pipeline
+### Modulus ML Pipeline (Experiments Mode)
+- `[UP]/[DOWN]` - Select experiment mode
+- `[Q]` - Toggle quick mode
+- `[H]` - Toggle hyperparameter tuning
+- `[T/Y]` - Adjust top-K configurations
+- `[F/G]` - Adjust CV folds
+- `[+/-]` - Adjust CPU count
+- `[ENTER]` - Run experiments
+- `[B]` - Switch to browse mode
+- `[ESC]` - Return to menu
+
+### Modulus Model Browser (Browse Mode)
+- `[UP]/[DOWN]` - Navigate model list
+- `[PAGE UP/DOWN]` - Navigate by page
+- `[HOME/END]` - Jump to first/last
+- `[ENTER]` - Load selected model
+- `[C]` - Copy model to model.pkl
+- `[R]` - Refresh model list
+- `[B]` - Switch to experiments mode
+- `[ESC]` - Return to menu
+
+### Live BCI → MQTT (Config Mode)
+- `[1]` - Edit MQTT broker address
+- `[2]` - Edit MQTT port
+- `[3]` - Edit MQTT topic
+- `[4]` - Edit confidence threshold
+- `[C]` - Connect to MQTT broker
+- `[ENTER]` - Start live session
+- `[ESC]` - Return to menu
+
+### Live BCI → MQTT (Running Mode)
+- `[SPACE]` - Stop session
 - `[ESC]` - Return to menu
 
 ### Calibration & Recording run

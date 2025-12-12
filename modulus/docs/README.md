@@ -1,29 +1,29 @@
-# Modulus ML Pipeline Documentation
+# Modulus ML Pipeline — Documentation
 
-Welcome to the Modulus ML Pipeline documentation. This documentation provides comprehensive guidance on using and extending the modular machine learning framework.
+> **Part of [Cogniflow](../../README.md)** — Integrated ML pipeline for EEG analysis
+
+Welcome to the Modulus ML Pipeline documentation. Modulus is the machine learning component of Cogniflow, providing comprehensive tools for EEG data analysis and model training.
+
+## Quick Links
+
+- **[📖 Documentation Index](INDEX.md)** — Full documentation overview
+- **[🚀 Quick Start](quick-start.md)** — Get running in 5 minutes
+- **[🎮 Pygame Integration](../../docs/modulus/QUICKSTART.md)** — Using via Cogniflow UI
 
 ## Documentation Structure
 
 ### Getting Started
-- **[Quick Start Guide](quick-start.md)** - Get up and running in 5 minutes
-- **[Installation Guide](installation.md)** - Detailed setup instructions
-- **[Basic Usage](basic-usage.md)** - Common workflows and examples
+- **[Quick Start Guide](quick-start.md)** — Get up and running in 5 minutes
+- **[Preprocessing Modes](preprocessing-modes.md)** — Understanding forward-only vs multiclass
 
 ### Core Concepts
-- **[Architecture Overview](architecture.md)** - System design and Clean Architecture principles
-- **[Data Preparation](data-preparation.md)** - How to prepare your data for the pipeline
-- **[Preprocessing Modes](preprocessing-modes.md)** - Understanding forward-only vs multiclass modes
-- **[Configuration Guide](configuration.md)** - How to configure the pipeline
-
-### Advanced Topics
-- **[Custom Preprocessing](custom-preprocessing.md)** - Adding your own preprocessing techniques
-- **[Model Selection](model-selection.md)** - Choosing and configuring models
-- **[Extending the Framework](extending-framework.md)** - Adding new components
+- **[Custom Preprocessing](custom-preprocessing.md)** — Available preprocessing techniques
+- **[Adding Custom Preprocessing](adding-custom-preprocessing.md)** — Create your own transformers
+- **[Preprocessing Experiments](preprocessing-experiments.md)** — Automated experimentation
 
 ### Reference
-- **[API Reference](api-reference.md)** - Detailed API documentation
-- **[Configuration Schema](config-schema.md)** - Complete configuration options
-- **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
+- **[System Design (SDD)](../SDD.md)** — Architecture and design principles
+- **[Configuration Files](../config/)** — Example configurations
 
 ## Key Features
 
@@ -32,19 +32,44 @@ Welcome to the Modulus ML Pipeline documentation. This documentation provides co
 - **Multiple Models**: Train and compare multiple models simultaneously
 - **Comprehensive Reporting**: Generate detailed reports in multiple formats
 - **Time-Series Support**: Built-in support for EEG and sensor data
+- **Cogniflow Integration**: Seamless access via Pygame UI or CLI
 
-## Quick Links
+## Using Modulus
 
-- [GitHub Repository](../../README.md)
-- [System Design Document](../SDD.md)
-- [Example Configurations](../config/)
-- [Test Suite](../tests/)
+### Via Cogniflow UI (Easiest)
+
+```bash
+poetry run python main.py
+# Press [M] for ML Pipeline
+```
+
+### Via CLI
+
+```bash
+cd modulus
+poetry run python run_forward_pipeline.py
+```
+
+## Project Context
+
+Modulus was designed as the ML pipeline component for the Cogniflow BCI training system. It handles:
+
+1. **Data Loading** — Reading EEG recordings from `.npy` files
+2. **Preprocessing** — Scaling, feature extraction, dimensionality reduction
+3. **Model Training** — Multiple classifiers with hyperparameter tuning
+4. **Evaluation** — Comprehensive metrics and model comparison
+5. **Reporting** — HTML, CSV, and JSON output formats
+
+## See Also
+
+- **[Cogniflow Main README](../../README.md)** — Full project documentation
+- **[ModulusScene](../../trainer/scenes/modulus.py)** — Pygame UI integration
+- **[Experiment Features](../../docs/modulus/EXPERIMENT_FEATURES.md)** — Advanced experiments
 
 ## Contributing
 
-See [CONTRIBUTING.md](contributing.md) for guidelines on contributing to the project.
+See the main [Cogniflow README](../../README.md) for contribution guidelines.
 
 ## License
 
-This project is part of a research thesis on EEG-based direction classification.
-
+Part of the Cogniflow research project on EEG-based direction classification.

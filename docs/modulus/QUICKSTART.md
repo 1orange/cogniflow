@@ -1,268 +1,173 @@
-# Quick Start Guide
+# Modulus ML Pipeline — Quick Start
 
-This guide will help you get started with the Modulus ML Pipeline in under 5 minutes.
+> **Part of Cogniflow** — This guide covers the integrated ML pipeline module.
+
+Get started with the Modulus ML Pipeline in 5 minutes.
 
 ## Prerequisites
 
-- Python 3.9 or higher
-- pip package manager
+- **Cogniflow installed** via Poetry (see [main README](../../README.md))
+- Python 3.11+ (as per main project requirements)
+- EEG data in `.npy` format (recorded via Cogniflow or your own data)
 
-## Method 1: Automated Quick Start (Recommended)
+## Method 1: Using Pygame Interface (Recommended)
 
-Run the automated setup script:
-
-```bash
-bash scripts/quick_start.sh
-```
-
-This will:
-1. Create a virtual environment
-2. Install all dependencies
-3. Generate sample data
-4. Create a default configuration
-5. Run the pipeline
-6. Generate results
-
-## Method 2: Manual Setup
-
-### Step 1: Install Dependencies
+The easiest way to use Modulus is through Cogniflow's built-in UI:
 
 ```bash
-# Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install the package
-pip install -r requirements.txt
-pip install -e .
+# From cogniflow root directory
+poetry run python main.py
 ```
 
-### Step 2: Generate Sample Data
+1. Press `[M]` to enter **ML Pipeline (Modulus)**
+2. Use `[UP]/[DOWN]` to select experiment mode:
+   - **Binary** — Forward vs not-forward classification
+   - **Multiclass** — All 4 directions classification
+   - **Both** — Run both experiments
+3. Toggle options:
+   - `[Q]` — Quick Mode (faster, fewer iterations)
+   - `[H]` — Hyperparameter Tuning (GridSearchCV)
+4. Press `[ENTER]` to run experiments
+5. Results appear in:
+   - `results/experiments_{mode}_{timestamp}/`
+   - `models/` (trained model files)
+
+## Method 2: Using CLI
+
+Run the pipeline from the command line:
 
 ```bash
-python scripts/generate_sample_data.py --output-dir data/
+# From cogniflow root directory
+cd modulus
+
+# Prepare your data first
+poetry run python prepare_direction_data.py --mode multiclass
+
+# Run the pipeline
+poetry run python run_forward_pipeline.py
 ```
 
-This creates sample `.npy` files in the `data/` directory with:
-- 300 total samples (3 files × 100 samples)
-- 20 features
-- Binary classification labels
-- Metadata (sample IDs, batch numbers, quality scores)
-
-### Step 3: Create Configuration
+Or use the CLI interface directly:
 
 ```bash
-python -m modulus.cli --generate-config
+poetry run python -m modulus.cli --config config/forward_direction_config.yaml
 ```
 
-This creates a `config.yaml` file with default settings. You can edit it to customize:
-- Data source and split ratios
-- Preprocessing steps (scaling, PCA)
-- Models and their hyperparameters
-- Output formats and location
+## Data Preparation
 
-### Step 4: Run the Pipeline
+### Option A: Use Cogniflow Record Scene
+
+1. Launch Cogniflow: `poetry run python main.py`
+2. Press `[R]` for Record scene
+3. Follow the wizard to record EEG data
+4. Data saved to `data/recorded_data_<direction>_<timestamp>.npy`
+
+### Option B: Prepare Existing Data
+
+If you already have recorded data:
 
 ```bash
-python -m modulus.cli --config config.yaml
+cd modulus
+
+# For multiclass (4 directions) - Recommended
+poetry run python prepare_direction_data.py --mode multiclass
+
+# For binary (forward vs rest)
+poetry run python prepare_direction_data.py --mode binary
 ```
 
-### Step 5: View Results
+## Viewing Results
 
-Results are saved in the `results/` directory:
-- **results.csv**: Tabular metrics for all models
-- **results.json**: JSON-formatted results
-- **results.html**: Interactive HTML report (open in browser)
-- **summary.txt**: Text summary with best model
+Results are saved in multiple formats:
 
-**Note**: When running preprocessing experiments (`run_preprocessing_experiments.py`), results are saved to `results/experiments_{mode}_{timestamp}/` and trained models are saved to `models/` folder. See `docs/modulus/EXPERIMENT_FEATURES.md` for details.
+```bash
+# HTML report (interactive)
+xdg-open modulus/results/forward_direction/results.html   # Linux
+open modulus/results/forward_direction/results.html       # macOS
+start modulus/results/forward_direction/results.html      # Windows
 
-## Using Your Own Data
+# CSV for analysis
+cat modulus/results/forward_direction/results.csv
 
-### Data Format
-
-The pipeline expects `.npy` files containing dictionaries with:
-
-```python
-{
-    "features": np.ndarray,  # Shape: (n_samples, n_features)
-    "labels": np.ndarray,    # Shape: (n_samples,)
-    "metadata": pd.DataFrame # Optional metadata
-}
+# Summary
+cat modulus/results/forward_direction/summary.txt
 ```
 
-### Creating Your Data Files
+### Example Output
 
-```python
-import numpy as np
-import pandas as pd
+```
+Model Comparison Results:
+┌─────────────────────┬──────────┬───────────┬────────┬──────────┐
+│ Model               │ Accuracy │ Precision │ Recall │ F1-Score │
+├─────────────────────┼──────────┼───────────┼────────┼──────────┤
+│ Random Forest       │ 0.8523   │ 0.8534    │ 0.8523 │ 0.8507   │
+│ SVM                 │ 0.8312   │ 0.8289    │ 0.8312 │ 0.8296   │
+│ Logistic Regression │ 0.7956   │ 0.7978    │ 0.7956 │ 0.7945   │
+│ Decision Tree       │ 0.7234   │ 0.7156    │ 0.7234 │ 0.7189   │
+└─────────────────────┴──────────┴───────────┴────────┴──────────┘
 
-# Prepare your data
-X = your_features  # numpy array
-y = your_labels    # numpy array
-metadata = pd.DataFrame({
-    "sample_id": range(len(X)),
-    # ... other metadata columns
-})
-
-# Save to .npy format
-data = {
-    "features": X,
-    "labels": y,
-    "metadata": metadata,
-}
-np.save("data/my_data.npy", data)
+Best model: Random Forest (Accuracy: 0.8523)
 ```
 
-### Update Configuration
+## Configuration
 
-Edit `config.yaml` to point to your data:
-
-```yaml
-Data:
-  source: "path/to/your/data/"  # Directory containing .npy files
-  feature_key: "features"        # Key for features in .npy dict
-  target_key: "labels"           # Key for labels in .npy dict
-  use_metadata: false            # Include metadata as features?
-```
-
-## Customizing Models
-
-### Add Models to Configuration
-
-```yaml
-Models:
-  - name: LogisticRegression
-    params:
-      max_iter: 1000
-      C: 1.0
-      
-  - name: RandomForest
-    params:
-      n_estimators: 200
-      max_depth: 10
-      
-  - name: GradientBoosting
-    params:
-      n_estimators: 100
-      learning_rate: 0.1
-      
-  - name: SVC
-    params:
-      kernel: rbf
-      C: 1.0
-```
-
-### Available Models
-
-- `LogisticRegression`
-- `RandomForest` / `RandomForestClassifier`
-- `GradientBoosting` / `GradientBoostingClassifier`
-- `SVC` / `SVM`
-- `DecisionTree` / `DecisionTreeClassifier`
-- `NaiveBayes` / `GaussianNB`
-- `KNN` / `KNeighborsClassifier`
-
-## Customizing Preprocessing
+Edit `modulus/config/forward_direction_config.yaml`:
 
 ```yaml
 Preprocessing:
-  standard_scaler: true      # Standardize features (mean=0, std=1)
-  pca_components: 10         # Reduce to 10 dimensions
-  # or
-  pca_components: 0.95       # Keep 95% of variance
-  # or
-  pca_components: null       # No PCA
-```
+  standard_scaler: true
+  pca_components: 100
+  
+  # Optional: feature extraction
+  extract_features: true
+  feature_list:
+    - mean
+    - std
+    - energy
 
-## Running Tests
-
-```bash
-# Run all tests
-pytest
-
-# Run specific test suites
-pytest tests/unit/          # Unit tests only
-pytest tests/integration/   # Integration tests
-pytest tests/e2e/          # End-to-end tests
-
-# Generate coverage report
-pytest --cov=modulus --cov-report=html
-```
-
-## Using the Makefile
-
-```bash
-make help            # Show all available commands
-make install         # Install dependencies
-make generate-data   # Generate sample data
-make generate-config # Generate config file
-make run            # Run pipeline
-make test           # Run all tests
-make coverage       # Run tests with coverage
-make clean          # Clean generated files
+Models:
+  - name: LogisticRegression
+  - name: RandomForest
+  - name: SVM
+  - name: GradientBoosting
 ```
 
 ## Troubleshooting
 
-### Issue: No .npy files found
-
-**Solution**: Ensure your data directory contains `.npy` files with the correct structure.
+### ModuleNotFoundError
 
 ```bash
-python scripts/generate_sample_data.py --output-dir data/
+# Ensure you're running from cogniflow root with poetry
+poetry run python main.py
 ```
 
-### Issue: Model not found
+### Data file not found
 
-**Solution**: Check that the model name in `config.yaml` matches an available model (see list above).
+```bash
+# Prepare data first
+cd modulus
+poetry run python prepare_direction_data.py --mode multiclass
+```
 
-### Issue: Memory error with large datasets
+### Out of memory
 
-**Solution**: 
-- Reduce PCA components to lower dimensionality
-- Process data in smaller batches
-- Use simpler models (LogisticRegression instead of RandomForest)
+Reduce dimensionality in config:
+
+```yaml
+Preprocessing:
+  downsample_factor: 2
+  pca_components: 30
+```
 
 ## Next Steps
 
-1. **Read the Architecture**: See `SDD.md` for system design details
-2. **Explore Examples**: Check `config/` for example configurations
-3. **Run Tests**: Verify everything works with `make test`
-4. **Customize**: Modify configuration for your specific use case
-5. **Extend**: Add custom models, preprocessing, or data loaders
+- **[Experiment Features](EXPERIMENT_FEATURES.md)** — Advanced experiment configuration
+- **[Preprocessing Modes](../../modulus/docs/preprocessing-modes.md)** — Forward-only vs multiclass
+- **[Custom Preprocessing](../../modulus/docs/custom-preprocessing.md)** — Add your own techniques
+- **[Architecture](../../modulus/docs/ARCHITECTURE.md)** — System design
 
-## Getting Help
+## See Also
 
-- Check the full documentation in `README.md`
-- Review the SDD in `SDD.md`
-- Examine test files for usage examples
-- Open an issue on the project repository
-
-## Example Workflow
-
-```bash
-# 1. Setup
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-
-# 2. Generate sample data
-python scripts/generate_sample_data.py
-
-# 3. Create config
-python -m modulus.cli --generate-config
-
-# 4. Edit config (optional)
-nano config.yaml
-
-# 5. Run pipeline
-python -m modulus.cli --config config.yaml
-
-# 6. View results
-open results/results.html  # macOS
-xdg-open results/results.html  # Linux
-start results/results.html  # Windows
-```
-
-That's it! You're now ready to use the Modulus ML Pipeline. 🚀
-
+- [Main Cogniflow README](../../README.md)
+- [Modulus Documentation Index](../../modulus/docs/INDEX.md)
+- [System Design Document](../../modulus/SDD.md)

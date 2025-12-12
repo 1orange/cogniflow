@@ -1,35 +1,61 @@
 # Quick Start Guide
 
-Get started with the Modulus ML Pipeline in 5 minutes.
+> **Part of [Cogniflow](../../README.md)** — Get started with the ML pipeline in 5 minutes
 
 ## Prerequisites
 
-- Python 3.13 (or 3.9+)
-- Poetry package manager
-- Your EEG direction data in `.npy` format
+- **Cogniflow installed** via Poetry (see [main README](../../README.md))
+- Python 3.11+
+- EEG direction data in `.npy` format (from Cogniflow Record scene or your own data)
 
-## Step 1: Install Dependencies
+## Method 1: Pygame UI (Easiest)
+
+The simplest way to run ML experiments:
 
 ```bash
-cd /path/to/modulus
-poetry install
+# From cogniflow root
+poetry run python main.py
 ```
 
-## Step 2: Prepare Your Data
+1. Press `[M]` to enter **ML Pipeline (Modulus)**
+2. Select experiment mode: `[UP]/[DOWN]`
+   - Binary — Forward vs not-forward
+   - Multiclass — All 4 directions
+   - Both — Run both experiments
+3. Toggle options:
+   - `[Q]` — Quick Mode
+   - `[H]` — Hyperparameter Tuning
+4. Press `[ENTER]` to run
+5. Results saved to `results/` and `models/`
+
+## Method 2: CLI
+
+### Step 1: Prepare Your Data
 
 Choose a preparation mode:
 
-### Option A: Multiclass (Recommended)
+#### Option A: Multiclass (Recommended)
 
 For standard direction classification with all 4 directions:
 
 ```bash
+cd modulus
 poetry run python prepare_direction_data.py --mode multiclass
 ```
 
-Creates: `data/directions_multiclass.npy` with 2814 samples across 4 classes.
+Creates: `data/directions_multiclass.npy` with all direction samples across 4 classes.
 
-### Option B: Forward-Only
+#### Option B: Binary
+
+For forward vs rest classification:
+
+```bash
+poetry run python prepare_direction_data.py --mode binary
+```
+
+Creates: `data/forward_vs_rest_binary.npy` with 2 classes.
+
+#### Option C: Forward-Only
 
 For single-direction analysis:
 
@@ -37,11 +63,11 @@ For single-direction analysis:
 poetry run python prepare_direction_data.py --mode forward-only
 ```
 
-Creates: `data/forward_prepared.npy` with 690 forward samples.
+Creates: `data/forward_prepared.npy` with forward samples only.
 
 **💡 See [Preprocessing Modes](preprocessing-modes.md) for detailed comparison.**
 
-## Step 3: Run the Pipeline
+### Step 2: Run the Pipeline
 
 ```bash
 poetry run python run_forward_pipeline.py
@@ -55,13 +81,14 @@ This will:
 5. Evaluate and compare results
 6. Generate reports
 
-## Step 4: View Results
+### Step 3: View Results
 
 Results are saved in `results/forward_direction/`:
 
 ```bash
 # View HTML report (interactive)
-xdg-open results/forward_direction/results.html
+xdg-open results/forward_direction/results.html   # Linux
+open results/forward_direction/results.html       # macOS
 
 # View CSV results
 cat results/forward_direction/results.csv
@@ -100,7 +127,6 @@ Best model: Random Forest (Accuracy: 0.8523)
 ### Edit Configuration
 
 ```bash
-# Edit the config file
 nano config/forward_direction_config.yaml
 ```
 
@@ -132,34 +158,73 @@ Models:
 poetry run python run_forward_pipeline.py --config config/my_custom_config.yaml
 ```
 
+## Using Your Own Data
+
+### Data Format
+
+The pipeline expects `.npy` files containing dictionaries with:
+
+```python
+{
+    "features": np.ndarray,  # Shape: (n_samples, n_features)
+    "labels": np.ndarray,    # Shape: (n_samples,)
+    "metadata": pd.DataFrame # Optional metadata
+}
+```
+
+### Creating Your Data Files
+
+```python
+import numpy as np
+import pandas as pd
+
+# Prepare your data
+X = your_features  # numpy array
+y = your_labels    # numpy array
+metadata = pd.DataFrame({
+    "sample_id": range(len(X)),
+    # ... other metadata columns
+})
+
+# Save to .npy format
+data = {
+    "features": X,
+    "labels": y,
+    "metadata": metadata,
+}
+np.save("data/my_data.npy", data)
+```
+
 ## Next Steps
 
-- **[Add Custom Preprocessing](adding-custom-preprocessing.md)** - Create your own preprocessing techniques
-- **[Preprocessing Modes](preprocessing-modes.md)** - Understand forward-only vs multiclass
-- **[Configuration Guide](../config/forward_direction_config.yaml)** - See all configuration options
-- **[Architecture](../SDD.md)** - Understand the system design
+- **[Preprocessing Modes](preprocessing-modes.md)** — Understand forward-only vs multiclass
+- **[Add Custom Preprocessing](adding-custom-preprocessing.md)** — Create your own techniques
+- **[Custom Preprocessing Guide](custom-preprocessing.md)** — See available options
+- **[Architecture (SDD)](../SDD.md)** — Understand the system design
+- **[Experiment Features](../../docs/modulus/EXPERIMENT_FEATURES.md)** — Advanced UI experiments
 
 ## Troubleshooting
 
-### Issue: ModuleNotFoundError
+### ModuleNotFoundError
 
 ```bash
-# Make sure you're using poetry
-poetry run python run_forward_pipeline.py
+# Make sure you're using poetry from cogniflow root
+poetry run python main.py
 
-# Or activate the virtual environment
-poetry shell
-python run_forward_pipeline.py
+# Or for CLI from modulus directory
+cd modulus
+poetry run python run_forward_pipeline.py
 ```
 
-### Issue: Data file not found
+### Data file not found
 
 ```bash
 # Prepare the data first
+cd modulus
 poetry run python prepare_direction_data.py --mode multiclass
 ```
 
-### Issue: Out of memory
+### Out of memory
 
 ```yaml
 # In config file, reduce dimensionality:
@@ -171,13 +236,14 @@ Preprocessing:
 ## Complete Example Workflow
 
 ```bash
-# 1. Navigate to project
-cd /home/jean/dev/diplomka/modulus
+# 1. Navigate to cogniflow root
+cd /path/to/cogniflow
 
-# 2. Install dependencies
-poetry install
+# 2. Record data (optional - use Cogniflow UI)
+poetry run python main.py  # Press [R] for Record
 
 # 3. Prepare data
+cd modulus
 poetry run python prepare_direction_data.py --mode multiclass
 
 # 4. Run pipeline
@@ -188,14 +254,9 @@ xdg-open results/forward_direction/results.html
 
 # 6. Try custom preprocessing
 nano config/forward_direction_config.yaml
-# ... edit preprocessing section ...
 
 # 7. Run again with changes
 poetry run python run_forward_pipeline.py
-
-# 8. Compare results
-diff results/forward_direction/results_*.csv
 ```
 
 That's it! You're now using the Modulus ML Pipeline. 🚀
-

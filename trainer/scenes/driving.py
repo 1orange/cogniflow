@@ -19,14 +19,23 @@ class DrivingScene(BaseScene):
     Renders everything to a fixed 320x180 'world' surface, then scales it to the window.
     """
 
-    def __init__(self, screen, clock, source=None, model_path=None, control_mode="bci"):
+    def __init__(self, screen, clock, source=None, model=None, control_mode="bci"):
+        """
+        Initialize the driving scene.
+        
+        Args:
+            screen: Pygame screen surface
+            clock: Pygame clock
+            source: EEG data source
+            model: Pre-loaded sklearn model (pipeline), or None for arrow mode
+            control_mode: "bci" or "arrow"
+        """
         super().__init__(screen, clock)
         self.source = source
-        self.model_path = model_path
-        self.model = None
+        self.model = model  # Pre-loaded model (sklearn pipeline)
 
         # Game state
-        self.control_mode = control_mode  # 'bci' or 'arrow'
+        self.control_mode = control_mode
 
         # Car (pseudo-3D position, matches your existing Car)
         self.car = Car(x=0, y=300, z=0)
@@ -67,7 +76,7 @@ class DrivingScene(BaseScene):
         self.road_sprite = pg.image.load(os.path.join(base, "road.png")).convert()
 
         # Load car sprite with proper alpha handling
-        self.car_sprite = pg.image.load(os.path.join(base, "car.png")).convert()
+        car_img = pg.image.load(os.path.join(base, "car.png")).convert()
 
         # Set colorkey BEFORE converting to alpha - this properly handles transparency
         car_img.set_colorkey((255, 0, 255))
@@ -76,6 +85,8 @@ class DrivingScene(BaseScene):
         orig_width, orig_height = car_img.get_size()
         target_width = 80
         target_height = int(target_width * orig_height / orig_width)
+        
+        self.car_sprite = pg.transform.scale(car_img, (target_width, target_height))
 
         self.mountains_sprite = pg.image.load(
             os.path.join(base, "mountains.png")
@@ -264,10 +275,16 @@ class DrivingScene(BaseScene):
                 24,
                 self.colors["yellow"],
             )
+            
+            # Model status
+            if self.model:
+                self.draw_text("Model: ✓ Loaded", 20, 170, 20, self.colors["green"])
+            else:
+                self.draw_text("Model: ✗ None", 20, 170, 20, self.colors["red"])
 
         # Speed
         self.draw_text(
-            f"Speed: {int(self.car.speed)}", 20, 170, 24, self.colors["white"]
+            f"Speed: {int(self.car.speed)}", 20, 200, 24, self.colors["white"]
         )
 
         # Gate target (only show briefly)
@@ -302,38 +319,59 @@ class DrivingScene(BaseScene):
     # BCI
     # ----------------------------
     def _process_bci_async(self, win, tnow):
+        """Process EEG window and return predicted commands."""
         try:
+            if self.model is None:
+                return []
+            
+            # Flatten the window for the model
+            # The model expects shape (n_samples, n_features) where n_features = timesteps * channels
+            X = win.flatten().reshape(1, -1)
+            
+            # Predict using the loaded model (includes preprocessing)
+            predictions = self.model.predict(X)
+            pred_label = predictions[0]
+            
+            # Map prediction to label
+            label_map = {0: "backward", 1: "forward", 2: "left", 3: "right"}
+            if isinstance(pred_label, (int, np.integer)):
+                label = label_map.get(int(pred_label), str(pred_label))
+            else:
+                label = str(pred_label)
+            
+            # Get probabilities if available
             proba = None
-
+            if hasattr(self.model, 'predict_proba'):
+                try:
+                    proba = self.model.predict_proba(X)[0]
+                except Exception:
+                    pass
+            
+            # Calculate confidence
             if proba is not None:
-                active_commands = []
-                for label, confidence in proba.items():
-                    if confidence >= CONF_THRESHOLD:
-                        active_commands.append((label, confidence))
-                active_commands.sort(key=lambda x: x[1], reverse=True)
+                confidence = float(np.max(proba))
+            else:
+                confidence = 0.8  # Default confidence when probabilities unavailable
+            
+            with self.bci_lock:
+                self.hist.append((label, confidence))
+                self.mv = majority_vote(list(self.hist), MAJORITY_K)
 
-                if active_commands:
-                    top_label, top_p = active_commands[0]
-                    with self.bci_lock:
-                        self.hist.append((top_label, top_p))
-                        self.mv = majority_vote(list(self.hist), MAJORITY_K)
-
-                        if self.mv and tnow >= self.dead_until:
-                            pred, conf = self.mv
-                            self.consecutive = (
-                                self.consecutive + 1 if pred == self.last_cmd else 1
-                            )
-                            if self.consecutive >= TURN_HOLD_FRAMES:
-                                self.last_cmd = pred
-                                self.dead_until = tnow + DEADZONE_SEC
-                                return [
-                                    cmd[0]
-                                    for cmd in active_commands
-                                    if cmd[1] >= CONF_THRESHOLD
-                                ]
+                if self.mv and tnow >= self.dead_until:
+                    pred, conf = self.mv
+                    self.consecutive = (
+                        self.consecutive + 1 if pred == self.last_cmd else 1
+                    )
+                    if self.consecutive >= TURN_HOLD_FRAMES:
+                        self.last_cmd = pred
+                        self.dead_until = tnow + DEADZONE_SEC
+                        if conf >= CONF_THRESHOLD:
+                            return [label]
             return []
         except Exception as e:
             print(f"BCI processing error: {e}")
+            import traceback
+            traceback.print_exc()
             return []
 
     def update_bci_control(self, dt, tnow):

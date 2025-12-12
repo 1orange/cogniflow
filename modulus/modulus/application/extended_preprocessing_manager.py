@@ -10,6 +10,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
+from modulus.infrastructure.ml.gpu_utils import detect_gpu_stack, to_gpu_array
 
 from modulus.application.custom_preprocessing import (
     TimeSeriesFeatureExtractor,
@@ -41,6 +42,8 @@ class ExtendedPreprocessingManager:
         config: Dict[str, Any],
         n_timesteps: Optional[int] = None,
         n_channels: Optional[int] = None,
+        use_gpu: bool = False,
+        device_id: Optional[int] = None,
     ):
         """
         Initialize extended preprocessing manager.
@@ -54,6 +57,14 @@ class ExtendedPreprocessingManager:
         self.n_timesteps = n_timesteps
         self.n_channels = n_channels
         self.pipeline: Optional[Pipeline] = None
+        self.use_gpu = use_gpu
+        self.device_id = device_id
+        self._gpu_state = detect_gpu_stack(device_id) if use_gpu else {"available": False}
+
+        if self.use_gpu and not self._gpu_state.get("available"):
+            fallback_reason = self._gpu_state.get("error") or "GPU stack not available"
+            print(f"[Preprocessing] GPU requested but unavailable: {fallback_reason}. Using CPU preprocessing.")
+            self.use_gpu = False
 
     def build(self, X: Optional[np.ndarray] = None) -> Pipeline:
         """
@@ -231,15 +242,18 @@ class ExtendedPreprocessingManager:
         if self.config.get("robust_scaler", False):
             steps.append(("robust_scaler", RobustScaler()))
         elif self.config.get("standard_scaler", False):
-            steps.append(("scaler", StandardScaler()))
+            scaler_cls = self._gpu_scaler() if self.use_gpu else StandardScaler
+            steps.append(("scaler", scaler_cls()))
 
         # 3. PCA (dimensionality reduction)
         pca_components = self.config.get("pca_components")
         if pca_components is not None:
             if isinstance(pca_components, int) and pca_components > 0:
-                steps.append(("pca", PCA(n_components=pca_components)))
+                pca_cls = self._gpu_pca() if self.use_gpu else PCA
+                steps.append(("pca", pca_cls(n_components=pca_components)))
             elif isinstance(pca_components, float) and 0 < pca_components < 1:
-                steps.append(("pca", PCA(n_components=pca_components)))
+                pca_cls = self._gpu_pca() if self.use_gpu else PCA
+                steps.append(("pca", pca_cls(n_components=pca_components)))
 
         # Create pipeline (empty pipeline is passthrough)
         if not steps:
@@ -281,7 +295,10 @@ class ExtendedPreprocessingManager:
                 "Pipeline not built or fitted. Call build() or fit() first."
             )
 
-        return self.pipeline.transform(X)
+        transformed = self.pipeline.transform(X)
+        if self.use_gpu and self._gpu_state.get("available"):
+            transformed, _ = to_gpu_array(transformed)
+        return transformed
 
     def fit_transform(self, X: np.ndarray) -> np.ndarray:
         """
@@ -296,7 +313,10 @@ class ExtendedPreprocessingManager:
         if self.pipeline is None:
             self.build(X)
 
-        return self.pipeline.fit_transform(X)
+        transformed = self.pipeline.fit_transform(X)
+        if self.use_gpu and self._gpu_state.get("available"):
+            transformed, _ = to_gpu_array(transformed)
+        return transformed
 
     def get_feature_count(self) -> Optional[int]:
         """Get the number of output features after transformation."""
@@ -306,12 +326,32 @@ class ExtendedPreprocessingManager:
         # This would require a sample transform to determine
         return None
 
+    def _gpu_scaler(self):
+        """Return cuML StandardScaler if available, otherwise sklearn."""
+        try:
+            return self._gpu_state["cuml"].preprocessing.StandardScaler
+        except Exception:  # noqa: BLE001
+            print("[Preprocessing] cuML StandardScaler not available; using CPU scaler.")
+            self.use_gpu = False
+            return StandardScaler
+
+    def _gpu_pca(self):
+        """Return cuML PCA if available, otherwise sklearn."""
+        try:
+            return self._gpu_state["cuml"].decomposition.PCA
+        except Exception:  # noqa: BLE001
+            print("[Preprocessing] cuML PCA not available; using CPU PCA.")
+            self.use_gpu = False
+            return PCA
+
 
 # Helper function to create extended preprocessing manager from config
 def create_extended_preprocessing_manager(
     config: Dict[str, Any],
     n_timesteps: Optional[int] = None,
     n_channels: Optional[int] = None,
+    use_gpu: bool = False,
+    device_id: Optional[int] = None,
 ) -> ExtendedPreprocessingManager:
     """
     Factory function to create ExtendedPreprocessingManager.
@@ -328,4 +368,6 @@ def create_extended_preprocessing_manager(
         config=config,
         n_timesteps=n_timesteps,
         n_channels=n_channels,
+        use_gpu=use_gpu,
+        device_id=device_id,
     )

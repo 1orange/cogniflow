@@ -7,17 +7,18 @@
 
 # User-specific stuff
 __pycache__/
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/**/usage.statistics.xml
-.idea/**/dictionaries
-.idea/**/shelf
+.idea/
+
+results/*/
+logs/
+
 
 # AWS User-specific
 .idea/**/aws.xml
 
 # Generated files
 .idea/**/contentModel.xml
+
 
 # Sensitive or high-churn files
 .idea/**/dataSources/

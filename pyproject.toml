@@ -1,38 +1,45 @@
-[project]
+[tool.poetry]
 name = "cogniflow"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "Jean Dossa Tsimbazafy",email = "orangel33t@gmail.com"}
-]
+authors = ["Jean Dossa Tsimbazafy <orangel33t@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = [
-    "numpy (>=2.3.2,<3.0.0)",
-    "scipy (>=1.16.1,<2.0.0)",
-    "scikit-learn (>=1.7.1,<2.0.0)",
-    "pygame (>=2.6.1,<3.0.0)",
-    "joblib (>=1.5.2,<2.0.0)",
-    "hidapi (>=0.14.0.post4,<0.15.0)",
-    "pycryptodome (>=3.23.0,<4.0.0)",
-    "pyhidapi (>=0.0.2,<0.0.3)",
-    "maturin (>=1.9.6,<2.0.0)",
-    "pandas (>=2.0.0,<3.0.0)",
-    "pyyaml (>=6.0,<7.0)",
-    "xgboost (>=1.7.0,<4.0.0)",
-    "matplotlib (>=3.7.0,<4.0.0)",
-    "seaborn (>=0.12.0,<0.14.0)",
-]
-
-[tool.poetry.dependencies]
-emotiv-rs = {path = "bci/emotiv/lib/wheels/emotiv_rs-0.1.0-cp313-cp313-linux_x86_64.whl", develop = false}
-
-[tool.poetry.group.dev.dependencies]
-ruff = ">=0.12,<1"
-
-[tool.poetry]
 include = ["py.typed"]
 package-mode = false
+
+[tool.poetry.dependencies]
+# Align with RAPIDS 25.10 (supports Python 3.12)
+python = "^3.12"
+# Core dependencies (pinned to stable, resolver-friendly ranges)
+numpy = ">=1.26.4,<1.29.0"  # Upper bound for RAPIDS compatibility
+scipy = "^1.14.1"
+scikit-learn = "^1.5.2"
+pygame = "^2.6.0"
+joblib = "^1.4.2"
+hidapi = "^0.14.0"
+pycryptodome = "^3.21.0"
+pyhidapi = "^0.0.2"
+maturin = "^1.7.6"
+pandas = "^2.2.3"
+pyyaml = "^6.0.2"
+xgboost = "^2.1.1"
+matplotlib = "^3.9.2"
+seaborn = "^0.13.2"
+emotiv-rs = {path = "bci/emotiv/lib/wheels/emotiv_rs-0.1.0-cp312-cp312-manylinux_2_34_x86_64.whl", develop = false}
+tqdm = "^4.67.1"
+paho-mqtt = "^2.1.0"
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "rapidsai"
+url = "https://pypi.nvidia.com"
+priority = "supplemental"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.12"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

@@ -12,6 +12,7 @@ from sklearn.metrics import (
     mean_absolute_error,
     r2_score,
 )
+from modulus.infrastructure.ml.gpu_utils import ensure_numpy
 
 
 class SklearnModelAdapter:
@@ -81,10 +82,13 @@ class SklearnEvaluator:
         Returns:
             Dictionary of metric names and values
         """
+        y_true_np, y_pred_np = ensure_numpy(y_true, y_pred)
+        y_proba_np = ensure_numpy(y_proba)[0] if y_proba is not None else None
+
         if self.task_type == "classification":
-            return self._evaluate_classification(y_true, y_pred, y_proba)
+            return self._evaluate_classification(y_true_np, y_pred_np, y_proba_np)
         else:
-            return self._evaluate_regression(y_true, y_pred)
+            return self._evaluate_regression(y_true_np, y_pred_np)
 
     def _evaluate_classification(
         self,

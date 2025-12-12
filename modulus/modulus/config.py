@@ -107,4 +107,10 @@ class ConfigLoader:
                 "formats": ["csv", "json", "html"],
                 "primary_metric": "accuracy",
             },
+            "Compute": {
+                # When true and GPU stack is available, use cuML/CuPy backends
+                "use_gpu": False,
+                # Optional CUDA device id to select; defaults to primary device
+                "device_id": None,
+            },
         }
