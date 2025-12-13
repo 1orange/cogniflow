@@ -23,8 +23,8 @@ flowchart TD
 
     subgraph "Test split<br/>All Evaluation Data"
         EVALUATE --> RANK[Final benchmark]
-        RANK --> END([Pipeline Complete])
     end
+        RANK --> END([Pipeline Complete])
 
     %% Styling
     classDef process fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
