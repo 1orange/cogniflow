@@ -9,7 +9,7 @@ Brain–Computer Interface (BCI) driving trainer built with Pygame, integrated w
 - Guided calibration with randomized direction prompts
 - Raw data recording wizard with per‑direction selection and parameters
 - Pseudo‑3D driving scene with BCI or Arrow‑key control modes
-- Modular scene architecture (`Menu`, `Calibration`, `Record`, `Driving`, `Modulus`)
+- Modular scene architecture (`Menu`, `Live`, `Record`, `Driving`, `Modulus`, `Settings`)
 
 **ML Pipeline (Modulus):**
 - Clean Architecture: Separation of concerns with distinct Domain, Application, Infrastructure layers
@@ -62,16 +62,16 @@ python main.py
 Landing screen to access all flows and show device/model status.
 - Shows: title, data source info, sample rate/channels, model status at `models/model.pkl`.
 - Navigation keys (in on‑screen order):
-  1. `[C] Calibrate`
-  2. `[R] Record Data`
-  3. `[M] ML Pipeline (Modulus)`
-  4. `[D] Drive (BCI)`
-  5. `[A] Drive (Arrow Keys)`
+  1. `[L] Live Drive` - Real-time BCI control via MQTT
+  2. `[A] Drive (Arrow Keys)` - Manual driving with keyboard
+  3. `[R] Record` - Record EEG data for training
+  4. `[M] Modulus` - ML pipeline for training models
+  5. `[S] Settings` - Device selection and configuration
   6. `[ESC] Quit`
 
 Notes:
-- "Drive (BCI)" requires a trained model file (`models/model.pkl`). If not found, a message prompts you to calibrate first.
-- "ML Pipeline (Modulus)" launches the integrated ML pipeline interface for training models on recorded EEG data.
+- "Live Drive" requires a trained model. Load one via Modulus → Browse first.
+- "Modulus" launches the integrated ML pipeline interface for training models on recorded EEG data.
 
 ### 2) Calibration (`trainer/scenes/calibration.py`)
 Guided collection of labeled EEG windows for a simple 4‑class control set.
@@ -181,7 +181,7 @@ Controls (Browse Mode):
 - `[B]` - Switch to experiments mode
 - `[ESC]` - Return to menu
 
-### 6) Live BCI → MQTT (`trainer/scenes/live.py`) ⭐
+### 6) Live Drive (`trainer/scenes/live.py`) ⭐
 Real-time BCI prediction to MQTT for controlling external devices (robots, cars, etc.).
 
 **Features:**
@@ -235,14 +235,12 @@ Controls:
 ## Order of All Buttons/Keys
 
 ### Menu (on‑screen order)
-1. `[S] Settings / Device` ⭐ **NEW** - Select EEG device
-2. `[C] Calibrate`
-3. `[R] Record Data`
-4. `[M] ML Pipeline (Modulus)` ⭐
-5. `[L] Live BCI → MQTT` ⭐
-6. `[D] Drive (BCI)`
-7. `[A] Drive (Arrow Keys)`
-8. `[ESC] Quit`
+1. `[L] Live Drive` - Real-time BCI control via MQTT
+2. `[A] Drive (Arrow Keys)` - Manual driving with keyboard
+3. `[R] Record` - Record EEG data for training
+4. `[M] Modulus` - ML pipeline for training models
+5. `[S] Settings` - Device selection and configuration
+6. `[ESC] Quit`
 
 ### Record wizard
 - Select directions: `[1]..[4]` toggles, `[ENTER]` continue, `[ESC]` cancel
@@ -276,7 +274,7 @@ Controls:
 - `[R]` - Refresh device list
 - `[ESC]` - Return to menu
 
-### Live BCI → MQTT (Config Mode)
+### Live Drive (Config Mode)
 - `[1]` - Edit MQTT broker address
 - `[2]` - Edit MQTT port
 - `[3]` - Edit MQTT topic
@@ -285,7 +283,7 @@ Controls:
 - `[ENTER]` - Start live session
 - `[ESC]` - Return to menu
 
-### Live BCI → MQTT (Running Mode)
+### Live Drive (Running Mode)
 - `[SPACE]` - Stop session
 - `[ESC]` - Return to menu
 
