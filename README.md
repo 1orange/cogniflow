@@ -31,25 +31,23 @@ Python dependencies are defined in `pyproject.toml`.
 
 ### Install
 
-Using Poetry (recommended):
+See `INSTALL.txt` for detailed installation instructions.
+
+**Quick install (Poetry):**
 ```bash
+# 1. Install Python dependencies
 poetry install
+
+# 2. Build and install the Emotiv Rust extension (requires Rust toolchain)
+./build_emotiv.sh
 ```
 
-Using pip (alternative):
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r <(python - <<'PY'
-import tomllib, sys
-data=tomllib.loads(open('pyproject.toml','rb').read())
-print('\n'.join(data['project']['dependencies']))
-PY
-)
-```
+**System dependencies:**
+- **Rust toolchain** (for building emotiv-rs): https://rustup.rs
+- **HID libraries** (Linux): `sudo apt install libhidapi-hidraw0 libhidapi-libusb0 libusb-1.0-0`
+- **HID libraries** (macOS): `brew install hidapi`
 
-You may need system packages for HID (examples):
-- `sudo apt install libhidapi-hidraw0 libhidapi-libusb0 libusb-1.0-0`
+**Note:** The `emotiv-rs` Rust extension is platform-specific and must be built locally. The build script automatically detects your Python version and platform.
 
 ### Run
 ```bash
@@ -66,7 +64,7 @@ Landing screen to access all flows and show device/model status.
 - Navigation keys (in on‑screen order):
   1. `[C] Calibrate`
   2. `[R] Record Data`
-  3. `[M] ML Pipeline (Modulus)` ⭐ **NEW**
+  3. `[M] ML Pipeline (Modulus)`
   4. `[D] Drive (BCI)`
   5. `[A] Drive (Arrow Keys)`
   6. `[ESC] Quit`
@@ -304,10 +302,13 @@ Controls:
 cogniflow/
 ├─ main.py                 # App entrypoint; runs trainer.main()
 ├─ config.py               # Global constants (EEG, game, UI)
+├─ build_emotiv.sh         # Build and install emotiv-rs extension
+├─ INSTALL.txt             # Detailed installation guide
 ├─ scripts/                # Test and utility scripts
 │  ├─ analyzer.py          # Utility to inspect saved .npy data
-│  ├─ check_packets.py      # Monitor Emotiv packet flow
-│  └─ test_emotiv_rs.py     # Test suite for emotiv-rs module
+│  ├─ build_emotiv.py      # Build script for emotiv-rs wheel
+│  ├─ check_packets.py     # Monitor Emotiv packet flow
+│  └─ test_emotiv_rs.py    # Test suite for emotiv-rs module
 ├─ data/                   # Saved recordings and metadata
 ├─ models/                 # Trained model(s), expected model.pkl
 ├─ trainer/

@@ -25,9 +25,9 @@ pyyaml = "^6.0.2"
 xgboost = "^3.1.2"
 matplotlib = "^3.9.2"
 seaborn = "^0.13.2"
-emotiv-rs = {path = "bci/emotiv/lib/wheels/emotiv_rs-0.1.0-cp313-cp313-manylinux_2_34_x86_64.whl", develop = false}
 tqdm = "^4.67.1"
 paho-mqtt = "^2.1.0"
+# emotiv-rs: Built separately via ./build_emotiv.sh (platform-specific Rust extension)
 
 [[tool.poetry.source]]
 name = "PyPI"

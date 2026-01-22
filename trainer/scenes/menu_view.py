@@ -46,20 +46,13 @@ class MenuView:
         menu_start_y = 160
         line_height = 36
         
-        self.draw_text("[S] Settings / Device", W // 2, menu_start_y, 30, self.colors["cyan"], True)
-        self.draw_text("[C] Calibrate", W // 2, menu_start_y + line_height, 30, self.colors["green"], True)
-        self.draw_text("[R] Record Data", W // 2, menu_start_y + line_height * 2, 30, self.colors["green"], True)
-        self.draw_text(
-            "[M] ML Pipeline (Modulus)", W // 2, menu_start_y + line_height * 3, 30, self.colors["green"], True
-        )
-        self.draw_text(
-            "[L] Live BCI → MQTT", W // 2, menu_start_y + line_height * 4, 30, self.colors["cyan"], True
-        )
-        self.draw_text("[D] Drive (BCI)", W // 2, menu_start_y + line_height * 5, 30, self.colors["green"], True)
-        self.draw_text(
-            "[A] Drive (Arrow Keys)", W // 2, menu_start_y + line_height * 6, 30, self.colors["green"], True
-        )
-        self.draw_text("[ESC] Quit", W // 2, menu_start_y + line_height * 7 + 15, 24, self.colors["yellow"], True)
+        self.draw_text("[L] Live Drive", W // 2, menu_start_y, 30, self.colors["cyan"], True)
+        self.draw_text("[A] Drive (Arrow Keys)", W // 2, menu_start_y + line_height, 30, self.colors["green"], True)
+        self.draw_text("[R] Record", W // 2, menu_start_y + line_height * 2, 30, self.colors["green"], True)
+        self.draw_text("[M] Modulus", W // 2, menu_start_y + line_height * 3, 30, self.colors["green"], True)
+        self.draw_text("[S] Settings", W // 2, menu_start_y + line_height * 4, 30, self.colors["cyan"], True)
+        
+        self.draw_text("[ESC] Quit", W // 2, menu_start_y + line_height * 6, 24, self.colors["yellow"], True)
 
         # Status bar at bottom
         status_y = H - 90
