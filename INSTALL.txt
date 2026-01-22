@@ -1,0 +1,115 @@
+================================================================================
+                         COGNIFLOW INSTALLATION GUIDE
+================================================================================
+
+REQUIREMENTS
+------------
+- Python 3.12 or higher
+- Poetry (Python package manager)
+- Rust toolchain (for building emotiv-rs extension)
+- Git
+
+SYSTEM DEPENDENCIES
+-------------------
+
+Linux (Debian/Ubuntu):
+    sudo apt install libhidapi-hidraw0 libhidapi-libusb0 libusb-1.0-0
+
+macOS:
+    brew install hidapi
+
+Windows:
+    HID support is built into Windows. No additional packages needed.
+
+RUST TOOLCHAIN
+--------------
+The emotiv-rs extension requires Rust to build. Install via rustup:
+
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+After installation, restart your terminal or run:
+    source $HOME/.cargo/env
+
+INSTALLATION STEPS
+------------------
+
+1. Clone the repository:
+    git clone <repository-url>
+    cd cogniflow
+
+2. Install Poetry (if not already installed):
+    curl -sSL https://install.python-poetry.org | python3 -
+
+3. Install Python dependencies:
+    poetry install
+
+4. Build and install the Emotiv Rust extension:
+    ./build_emotiv.sh
+
+   This script will:
+   - Build the emotiv-rs wheel using maturin
+   - Install it into your Poetry environment
+   - Verify the installation
+
+5. Verify installation:
+    poetry run python -c "import emotiv_rs; print('emotiv-rs OK')"
+
+RUNNING THE APPLICATION
+-----------------------
+
+    poetry run python main.py
+
+Or activate the virtual environment first:
+    poetry shell
+    python main.py
+
+TROUBLESHOOTING
+---------------
+
+"emotiv-rs is NOT installed" after running build_emotiv.sh:
+    - Ensure Rust is installed: rustc --version
+    - Ensure maturin is available: poetry run maturin --version
+    - Check for build errors in the output
+
+Permission denied when accessing Emotiv device (Linux):
+    - Add udev rules for the Emotiv device, or run as root once
+    - Create /etc/udev/rules.d/99-emotiv.rules with appropriate permissions
+
+Build fails with "cargo not found":
+    - Ensure Rust is installed and in PATH
+    - Run: source $HOME/.cargo/env
+    - Restart your terminal
+
+HID library errors:
+    - Install system HID libraries (see SYSTEM DEPENDENCIES above)
+
+BUILD SCRIPT OPTIONS
+--------------------
+
+    ./build_emotiv.sh              # Build and install emotiv-rs
+    ./build_emotiv.sh --check      # Check if emotiv-rs is installed
+    ./build_emotiv.sh --build-only # Build wheel only, don't install
+
+The wheel is saved to: bci/emotiv/wheels/
+
+DEVELOPMENT SETUP
+-----------------
+
+For development, you may also want to install dev dependencies:
+    poetry install --with dev
+
+Run linter:
+    poetry run ruff check .
+
+Run tests:
+    poetry run python scripts/test_emotiv_rs.py
+
+UPDATING
+--------
+
+After pulling new changes that modify the Rust code:
+    ./build_emotiv.sh
+
+This will rebuild and reinstall the emotiv-rs extension.
+
+================================================================================

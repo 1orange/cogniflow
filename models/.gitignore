@@ -1,0 +1,13 @@
+*.pkl
+*.joblib
+*.joblib.gz
+*.joblib.bz2
+*.joblib.zip
+*.joblib.tar
+*.joblib.tar.gz
+*.joblib.tar.bz2
+*.joblib.tar.zip
+*.joblib.tar.tar
+*.joblib.tar.tar.gz
+*.joblib.tar.tar.bz2
+*.joblib.tar.tar.zip

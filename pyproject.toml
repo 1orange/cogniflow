@@ -1,0 +1,46 @@
+[tool.poetry]
+name = "cogniflow"
+version = "0.1.0"
+description = ""
+authors = ["Jean Dossa Tsimbazafy <orangel33t@gmail.com>"]
+readme = "README.md"
+include = ["py.typed"]
+package-mode = false
+
+[tool.poetry.dependencies]
+# Align with RAPIDS 25.10 (supports Python 3.12)
+python = "^3.12"
+# Core dependencies (pinned to stable, resolver-friendly ranges)
+numpy = "^2.3.5"  # Upper bound for RAPIDS compatibility
+scipy = "^1.14.1"
+scikit-learn = "^1.5.2"
+pygame = "^2.6.0"
+joblib = "^1.4.2"
+hidapi = "^0.14.0"
+pycryptodome = "^3.21.0"
+pyhidapi = "^0.0.2"
+maturin = "^1.7.6"
+pandas = "^2.2.3"
+pyyaml = "^6.0.2"
+xgboost = "^3.1.2"
+matplotlib = "^3.9.2"
+seaborn = "^0.13.2"
+tqdm = "^4.67.1"
+paho-mqtt = "^2.1.0"
+# emotiv-rs: Built separately via ./build_emotiv.sh (platform-specific Rust extension)
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "rapidsai"
+url = "https://pypi.nvidia.com"
+priority = "supplemental"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.14"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

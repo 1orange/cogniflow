@@ -1,0 +1,45 @@
+Data:
+  source: data/
+  loader: npy
+  feature_key: features
+  target_key: labels
+  metadata_key: metadata
+  use_metadata: false
+  task_type: classification
+  split:
+    train: 0.7
+    val: 0.15
+    test: 0.15
+    random_state: 42
+    stratify: true
+
+Preprocessing:
+  standard_scaler: true
+  pca_components: null  # Set to integer for PCA, or float for variance ratio
+
+Models:
+  - name: LogisticRegression
+    params:
+      max_iter: 1000
+      random_state: 42
+
+  - name: RandomForest
+    params:
+      n_estimators: 100
+      max_depth: null
+      random_state: 42
+
+  - name: GradientBoosting
+    params:
+      n_estimators: 100
+      learning_rate: 0.1
+      random_state: 42
+
+Output:
+  path: results/
+  formats:
+    - csv
+    - json
+    - html
+  primary_metric: accuracy
+
