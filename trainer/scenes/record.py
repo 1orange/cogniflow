@@ -102,7 +102,7 @@ class RecordScene(BaseScene):
                 # Read samples
                 n_need = int(dt * self.model.fs)
                 if n_need > 0:
-                    samples = self.source.read(n_need)
+                    samples = self.controller.source.read(n_need)
                     self.model.add_samples(samples)
 
                 # Extract windows during task phase
